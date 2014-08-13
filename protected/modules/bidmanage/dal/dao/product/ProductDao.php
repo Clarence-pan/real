@@ -334,10 +334,10 @@ class ProductDao extends DaoModule {
             }
         }
         if (!empty($condParams['productName'])) {
-            $condSqlSegment .= " AND b.product_name LIKE %" . $condParams['productName'] ."%";
+            $condSqlSegment .= " AND b.product_name LIKE '%" . $condParams['productName'] ."%'";
         }
         if (!empty($condParams['productLineName'])) {
-            $condSqlSegment .= " AND b.product_line_name LIKE %" . $condParams['productLineName'] ."%";
+            $condSqlSegment .= " AND b.product_line_name LIKE '%" . $condParams['productLineName'] ."%'";
         }
         if (!empty($condParams['checkFlag'])) {
             $condSqlSegment .= ' AND b.checker_flag = ' . $condParams['checkFlag'];
