@@ -283,6 +283,8 @@ class FinanceIao {
      */
     public static function getFmisCharts($reqParams)
 	{
+		// 初始化接口调用客户端对象
+		$client = new RESTClient();
 		$bbLog = new BBLog();
 	    $url = Yii::app()->params['FMIS_HOST'] . 'restfulApi/AgencyCount/';
 	    $params = array(
@@ -302,7 +304,7 @@ class FinanceIao {
 		$posM = BPMoniter::createMoniter(__METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
 		$res = false;
 		try {
-			$res = $this->_restfulClient->get($url, $params);
+			$res = $client->get($url, $params);
 			if (!$res['success'] || empty($res['data'])) {
 				// 抛异常
 				throw new BBException(ErrorCode::ERR_231206, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231206)], BPMoniter::getMoniter($posM).Symbol::CONS_DOU_COLON.$url.Symbol::CONS_DOU_COLON.$params);
@@ -324,10 +326,12 @@ class FinanceIao {
 	}
 	
 	/**
-     * 查询财务账户列表
+     * 查询财务消耗明细
      */
     public static function getExpenseInfo($reqParams)
 	{
+		// 初始化接口调用客户端对象
+		$client = new RESTClient();
 		$bbLog = new BBLog();
 	    $url = Yii::app()->params['FMIS_HOST'] . 'restfulApi/AgencyCount/';
 	    $params = array(
@@ -339,7 +343,7 @@ class FinanceIao {
 		$posM = BPMoniter::createMoniter(__METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
 		$res = false;
 		try {
-			$res = $this->_restfulClient->get($url, $params);
+			$res = $client->get($url, $params);
 			if (!$res['success'] || empty($res['data'])) {
 				// 抛异常
 				throw new BBException(ErrorCode::ERR_231207, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231207)], BPMoniter::getMoniter($posM).Symbol::CONS_DOU_COLON.$url.Symbol::CONS_DOU_COLON.$params);
