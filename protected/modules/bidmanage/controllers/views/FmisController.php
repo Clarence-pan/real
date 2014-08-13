@@ -160,27 +160,31 @@ class FmisController extends restUIServer {
 	public function doRestGetExpenseinfo($url, $data) {
 		
 		$result = $this->genrateReturnRest();
+		
 		try {
 			// 校验参数
 			if (!empty($data['expenseType']) && is_numeric($data['expenseType']) && isset($data['start']) 
 				&& !empty($data['limit']) && is_numeric($data['start']) && is_numeric($data['limit']) ) {
-				$result['errorCode'] = ErrorCode::ERR_210000;
-				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_210000)];
-				// 返回参数不正确
-				$this->returnRestStand($result);
-			} else {
-				
+					
 				// 查询财务账户报表
 				$data['data'] = $this->getAccountId();
-				$result = $this->fmis->getExpenseInfo($data);
+				$resultMod = $this->fmis->getExpenseInfo($data);
 				
 				// 整合结果，自定义编码和语句
-				$result['data'] = $data;
+				$result['data'] = $resultMod;
 				$result['errorCode'] = ErrorCode::ERR_231500;
 				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231500)];
 				
 				// 返回结果
 				$this->returnRestStand($result);
+				
+			} else {
+				
+				$result['errorCode'] = ErrorCode::ERR_210000;
+				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_210000)];
+				// 返回参数不正确
+				$this->returnRestStand($result);
+				
 			}
 		} catch(BBException $e) {
 			$result['success'] = false;

@@ -14,6 +14,7 @@ class FmisManageMod {
     private $commonDao;
     private $bidProductDao;
     private $productDao;
+    private $bbLog;
     
     function __construct() {
     	$this->manageDao = new FmisManageDao();//发票
@@ -21,6 +22,7 @@ class FmisManageMod {
     	$this->commonDao = new CommonDao();
     	$this->bidProductDao = new BidProductDao();
         $this->productDao = new ProductDao();
+        $this->bbLog = new BBLog();
     }
        
     /**

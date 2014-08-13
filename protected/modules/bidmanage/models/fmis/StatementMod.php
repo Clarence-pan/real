@@ -16,6 +16,7 @@ class StatementMod {
     private $productDao;
     private $userDao;
     private $_productIao;
+    private $bbLog;
 
     function __construct() {
         $this->statementDao = new StatementDao();
@@ -23,6 +24,7 @@ class StatementMod {
         $this->productDao = new ProductDao();
         $this->userDao = new UserManageDao();
         $this->_productIao = new ProductIao;
+        $this->bbLog = new BBLog();
     }
 
     /**
