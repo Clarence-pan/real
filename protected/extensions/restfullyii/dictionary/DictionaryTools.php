@@ -144,4 +144,32 @@ class DictionaryTools {
         }
         return $result;
     }
+    
+    /*
+     * 获取消耗明细类型
+     */
+    public static function getExpenseType($params) {
+        switch (strval($params)) {
+            case chr(49):
+            	// 1   竞拍
+                $result = BusinessType::EXPENSE_BID_NAME;
+                break;
+            case chr(50):
+                // 2 分类页打包
+                $result = BusinessType::EXPENSE_CLS_PACK_NAME;
+                break;
+            case chr(51):
+            	// 3   线下          
+                $result = BusinessType::EXPENSE_OFFLINE_NAME;
+                break;
+            case chr(52):
+            	// 4   过期            
+                $result = BusinessType::EXPENSE_OVERDUE_NAME;
+                break;
+            default:
+                $result = BusinessType::NO_NAME;
+                break;
+        }
+        return $result;
+    }
 }

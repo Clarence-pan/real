@@ -414,4 +414,55 @@ class UserController extends restSysServer {
         $this->returnRest($result['data'], $result['success'], $result['errorCode'], $result['msg']);
     }
     
+    /**
+	 * 查询财务账户报表
+	 */
+	public function doRestGetFmischarts($url, $data) {
+		
+		$result = $this->genrateReturnRest();
+		try {
+			// 校验参数
+			if (isset($data['start']) && !empty($data['limit']) && isset($data['isExcel']) 
+					&& is_numeric($data['start']) && is_numeric($data['limit']) && is_numeric($data['isExcel'])) {
+				$result['errorCode'] = ErrorCode::ERR_210000;
+				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_210000)];
+				// 返回参数不正确
+				$this->returnRestStand($result);
+			} else {
+				
+				// 查询财务账户报表
+				$data = $this->_statement->getFmisCharts($data);
+				
+				// 整合结果，自定义编码和语句
+				$result['data'] = $data;
+				$result['errorCode'] = ErrorCode::ERR_231500;
+				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231500)];
+				
+				// 返回结果
+				$this->returnRestStand($result);
+			}
+		} catch(BBException $e) {
+			$result['success'] = false;
+			if (intval(chr(48)) != $e->getErrCode()) {
+				$result['errorCode'] = $e->getErrCode();
+				$result['msg'] = $e->getErrMessage();
+			} else {
+				$result['errorCode'] = ErrorCode::ERR_231000;
+				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231000)];
+			}
+			
+			// 返回结果
+			$this->returnRestStand($result);
+		} catch(Exception $e) {
+			// 注入异常和日志
+			new BBException($e->getCode(), $e->getMessage());
+			$result['success'] = false;
+			$result['errorCode'] = ErrorCode::ERR_231000;
+			$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231000)];
+			// 返回结果
+			$this->returnRestStand($result);
+		}
+
+	}
+    
 }

@@ -101,5 +101,142 @@ class FmisManageDao extends DaoModule {
 			return false;
 		};
     }
+    
+    /**
+	 * 查询竞价消费信息
+	 */
+	public function getBidExpenseInfo($param) {
+		// 初始化返回结果
+		$result = array();
+
+		try {
+			
+			// 初始化动态SQL
+			$dySql = "";
+			if (isset($param['accountId'])) {
+				$dySql = $dySql." AND account_id IN (".$param['accountId'].")";
+			}
+			if (!empty($params['startDate']) && empty($params['endDate'])) {
+				$dySql = $dySql." AND DATE_FORMAT(add_time, '%Y-%m-%d') >= '".$params['startDate']."'";
+			} else if (empty($params['startDate']) && !empty($params['endDate'])) {
+				$dySql = $dySql." AND DATE_FORMAT(add_time, '%Y-%m-%d') <= '".$params['endDate']."'";
+			} else if (!empty($params['startDate']) && !empty($params['endDate'])) {
+				$dySql = $dySql." AND DATE_FORMAT(add_time, '%Y-%m-%d') <= '".$params['endDate']."' AND DATE_FORMAT(add_time, '%Y-%m-%d') >= '".$params['startDate']."'";
+			}
+			// 初始化分页SQL
+			$pageSql = "";
+			if (isset($param['start']) && isset($param['limit'])) {
+				$pageSql = $pageSql." LIMIT ".$param['start'].",".$param['limit'];
+				// 查询数量
+				$sqlCount = "SELECT
+								COUNT(0) AS countRe			 
+							FROM 
+								bid_show_product 
+							WHERE 
+								del_flag = 0 ".
+							$dySql;
+				$result['count'] = $this->executeSql($sqlCount, self::ROW);
+			}
+			
+			// 查询信息
+			$sqlRows = "SELECT
+							fmis_id, 
+							bid_price_niu, 
+							bid_price_coupon,  
+							fmis_id_coupon,
+							add_time			 
+						FROM 
+							bid_show_product 
+						WHERE
+							del_flag = 0 ".
+						$dySql.
+						" ORDER BY 
+							add_time 
+						DESC ".
+						$pageSql;
+			$result['rows'] = $this->executeSql($sqlRows, self::ALL);
+			
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+            // 抛异常
+			throw new BBException(ErrorCode::ERR_231550, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231550)], $sqlRows.Symbol::CONS_DOU_COLON.$sqlCount."向数据库查询竞价消耗信息异常", $e);
+        }
+        
+        // 返回结果
+		return $result;
+	}
+    
+    /**
+	 * 查询打包计划消费信息
+	 */
+	public function getPackExpenseInfo($param) {
+		// 初始化返回结果
+		$result = array();
+
+		try {
+			
+			// 初始化动态SQL
+			$dySql = "";
+			if (isset($param['accountId'])) {
+				$dySql = $dySql." AND account_id IN (".$param['accountId'].")";
+			}
+			if (!empty($params['startDate']) && empty($params['endDate'])) {
+				$dySql = $dySql." AND DATE_FORMAT(add_time, '%Y-%m-%d') >= '".$params['startDate']."'";
+			} else if (empty($params['startDate']) && !empty($params['endDate'])) {
+				$dySql = $dySql." AND DATE_FORMAT(add_time, '%Y-%m-%d') <= '".$params['endDate']."'";
+			} else if (!empty($params['startDate']) && !empty($params['endDate'])) {
+				$dySql = $dySql." AND DATE_FORMAT(add_time, '%Y-%m-%d') <= '".$params['endDate']."' AND DATE_FORMAT(add_time, '%Y-%m-%d') >= '".$params['startDate']."'";
+			}
+			// 初始化分页SQL
+			$pageSql = "";
+			if (isset($param['start']) && isset($param['limit'])) {
+				$pageSql = $pageSql." LIMIT ".$param['start'].",".$param['limit'];
+				
+				// 查询数量
+				$sqlCount = "SELECT
+								COUNT(0) AS countRe			 
+							FROM 
+								pack_plan_basic 
+							WHERE 
+								del_flag = 0 
+							AND 
+								fmis_mark = 1".
+							$dySql;
+				$result['count'] = $this->executeSql($sqlCount, self::ROW);
+			}
+			
+			// 查询信息
+			$sqlRows = " SELECT 	
+							fmis_id,
+							plan_price, 
+							add_time	 
+						FROM 
+							pack_plan_basic 
+						WHERE 
+							del_flag = 0 
+						AND 
+							fmis_mark = 1".
+						$dySql.
+						" ORDER BY 
+							add_time 
+						DESC ".
+						$pageSql;
+			$result['rows'] = $this->executeSql($sqlRows, self::ALL);
+			
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+            // 抛异常
+			throw new BBException(ErrorCode::ERR_231550, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231550)], $sqlRows.Symbol::CONS_DOU_COLON.$sqlCount."向数据库查询打包计划消费信息异常", $e);
+        }
+        
+        // 返回结果
+		return $result;
+	}
+   
+    
 }
 ?>

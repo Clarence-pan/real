@@ -277,5 +277,88 @@ class FinanceIao {
 		}
 	    return $res;
 	}
+	
+	/**
+     * 查询财务账户列表
+     */
+    public static function getFmisCharts($reqParams)
+	{
+		$bbLog = new BBLog();
+	    $url = Yii::app()->params['FMIS_HOST'] . 'restfulApi/AgencyCount/';
+	    $params = array(
+	        'func' => 'getNGCharts',
+	        'params' => array(
+	            'start_date' => $reqParams['startDate'],
+	            'end_date' => $reqParams['endDate'],
+	            'agency_id' => $reqParams['agencyId'],
+	            'agency_name' => $reqParams['agencyName'],
+	            'is_excel' => $reqParams['isExcel'],
+	            'start' => $reqParams['start'],
+	            'limit' => $reqParams['limit'],
+	        ),
+	    );
+	    
+	    // 开启监控
+		$posM = BPMoniter::createMoniter(__METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
+		$res = false;
+		try {
+			$res = $this->_restfulClient->get($url, $params);
+			if (!$res['success'] || empty($res['data'])) {
+				// 抛异常
+				throw new BBException(ErrorCode::ERR_231206, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231206)], BPMoniter::getMoniter($posM).Symbol::CONS_DOU_COLON.$url.Symbol::CONS_DOU_COLON.$params);
+			}
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        }  catch(Exception $e) {
+			// 抛异常
+			throw new BBException(ErrorCode::ERR_231206, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231206)], BPMoniter::getMoniter($posM).Symbol::CONS_DOU_COLON.$url.Symbol::CONS_DOU_COLON.$params,$e);
+		}
+		
+		// 填充日志
+		if ($bbLog->isInfo()) {
+			$bbLog->logInterface($params, $url, $res, chr(48), $posM, 650, __METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
+		}
+		
+	    return $res['data'];
+	}
+	
+	/**
+     * 查询财务账户列表
+     */
+    public static function getExpenseInfo($reqParams)
+	{
+		$bbLog = new BBLog();
+	    $url = Yii::app()->params['FMIS_HOST'] . 'restfulApi/AgencyCount/';
+	    $params = array(
+	        'func' => 'getExpenseInfo',
+	        'params' => $reqParams,
+	    );
+	    
+	    // 开启监控
+		$posM = BPMoniter::createMoniter(__METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
+		$res = false;
+		try {
+			$res = $this->_restfulClient->get($url, $params);
+			if (!$res['success'] || empty($res['data'])) {
+				// 抛异常
+				throw new BBException(ErrorCode::ERR_231207, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231207)], BPMoniter::getMoniter($posM).Symbol::CONS_DOU_COLON.$url.Symbol::CONS_DOU_COLON.$params);
+			}
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        }  catch(Exception $e) {
+			// 抛异常
+			throw new BBException(ErrorCode::ERR_231207, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231207)], BPMoniter::getMoniter($posM).Symbol::CONS_DOU_COLON.$url.Symbol::CONS_DOU_COLON.$params,$e);
+		}
+		
+		// 填充日志
+		if ($bbLog->isInfo()) {
+			$bbLog->logInterface($params, $url, $res, chr(48), $posM, 400, __METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
+		}
+		
+	    return $res['data'];
+	}
+	
 }
 

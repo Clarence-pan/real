@@ -6,6 +6,7 @@ Yii::import('application.modules.bidmanage.dal.dao.user.UserManageDao');
 Yii::import('application.modules.bidmanage.dal.iao.BossIao');
 Yii::import("application.models.CurlUploadModel");
 Yii::import('application.modules.bidmanage.dal.iao.ProductIao');
+Yii::import('application.modules.bidmanage.dal.iao.FinanceIao');
 
 //bid-fmis
 class StatementMod {
@@ -515,6 +516,131 @@ class StatementMod {
         $result['rows'] = $rows;
         return !empty($result) ? $result : array();
     }
+
+
+	/**
+	 * 获取财务报表
+	 */
+	public function getFmisCharts($param) {
+		// 填充日志
+		if ($this->bbLog->isInfo()) {
+			$this->bbLog->logMethod($param, "获取财务报表：".$param['isExcel'], __METHOD__.Symbol::CONS_DOU_COLON.__LINE__, chr(50));
+		}
+		
+		// 初始化返回结果，如果为其他，则这样初始化
+		$result = array();
+		// 如果为列表则这样初始化
+		$result['rows'] = array();
+		$result['count'] = 0;
+
+		// 逻辑全部在异常块里执行，代码量不要超过200，超过200需要另抽方法
+		try {
+			// 添加监控示例
+			$posTry = BPMoniter::createMoniter(__METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
+			$flag = Symbol::BPM_EIGHT_HUNDRED;
+			
+			// 整合参数
+			$fmisParam['isExcel'] = $param['isExcel'];
+			$fmisParam['start'] = $param['start'];
+			$fmisParam['limit'] = $param['limit'];
+			$fmisParam['agencyId'] = intval(chr(48));
+			if (!empty($param['agencyId'])) {
+				$fmisParam['agencyId'] = $param['agencyId'];
+			}
+			$fmisParam['agencyName'] = Symbol::EMPTY_STRING;
+			if (!empty($param['agencyName'])) {
+				$fmisParam['agencyName'] = $param['agencyName'];
+			}
+			$fmisParam['startDate'] = Symbol::EMPTY_STRING;
+			$fmisParam['endDate'] = Symbol::EMPTY_STRING;
+			if (empty($param['startDate']) && empty($param['endDate'])) {
+				$fmisParam['startDate'] = date(Sundry::TIME_Y_M_D, strtotime('-6 d',date(Sundry::TIME_Y_M_D)));
+				$fmisParam['endDate'] = date(Sundry::TIME_Y_M_D);
+			}
+			if (!empty($param['startDate'])) {
+				$fmisParam['startDate'] = $param['startDate'];
+			}
+			if (!empty($param['endDate'])) {
+				$fmisParam['endDate'] = $param['endDate'];
+			}
+			
+			// 获取财务系统报表信息
+			$iaoData = FinanceIao::getFmisCharts($fmisParam);
+			unset($fmisParam);
+			
+			// 设置数量
+			if (intval(chr(49)) == $param['isExcel']) {
+				$result['count'] = count($iaoData['rows']);
+				$flag = Symbol::BPM_TWENTY_THOUSAND;
+			} else {
+				$result['count'] = $iaoData['count'];
+			}
+			
+			// 如果结果不为空，则整合数据
+			if (!empty($iaoData['rows']) && is_array($iaoData['rows'])) {
+				// 初始化接口数据维度
+				$iaoWd = array();
+				
+				$chargeTemp = $iaoData['charge'];
+				foreach($chargeTemp as $chargeTempObj) {
+					$iaoWd[$chargeTempObj['agency_id'].chr(95).$chargeTempObj['currency_type'].chr(95).chr(48)] = $chargeTempObj['amt'];
+				}
+				unset($chargeTemp);
+				
+				$expenseChargeTemp = $iaoData['expenseCharge'];
+				foreach($expenseChargeTemp as $expenseChargeTempObj) {
+					$iaoWd[$expenseChargeTempObj['agency_id'].chr(95).$expenseChargeTempObj['currency_type'].chr(95).chr(49)] = $expenseChargeTempObj['amt'];
+				}
+				unset($expenseChargeTemp);
+				
+				$expenseTemp = $iaoData['expense'];
+				foreach($expenseTemp as $expenseTempObj) {
+					$iaoWd[$expenseTempObj['agency_id'].chr(95).$expenseTempObj['currency_type'].chr(95).chr(50)] = $expenseTempObj['amt'];
+				}
+				unset($expenseTemp);
+				
+				// 整合数据
+				$rowsTemp =  $iaoData['rows'];
+				unset($iaoData);
+				
+				$rows = array();
+				foreach ($rowsTemp as $rowsTempObj) {
+					$temp = array();
+					$temp['agencyId'] = $rowsTempObj['agency_id'];
+					$temp['agencyName'] = $rowsTempObj['agency_name'];
+					$temp['chargeNiuAmt'] = CommonTools::getEmptyNum($iaoWd[$rowsTempObj['agency_id'].chr(95).chr(48).chr(95).chr(48)])
+									+ CommonTools::getEmptyNum($iaoWd[$rowsTempObj['agency_id'].chr(95).chr(49).chr(95).chr(48)]);
+					$temp['chargeCouponAmt'] = CommonTools::getEmptyNum($iaoWd[$rowsTempObj['agency_id'].chr(95).chr(50).chr(95).chr(48)]);
+					$temp['expenseNiuAmt'] = abs(CommonTools::getEmptyNum($iaoWd[$rowsTempObj['agency_id'].chr(95).chr(48).chr(95).chr(49)])) 
+									+ abs(CommonTools::getEmptyNum($iaoWd[$rowsTempObj['agency_id'].chr(95).chr(49).chr(95).chr(49)]))
+									+ CommonTools::getEmptyNum($iaoWd[$rowsTempObj['agency_id'].chr(95).chr(48).chr(95).chr(50)])
+									+ CommonTools::getEmptyNum($iaoWd[$rowsTempObj['agency_id'].chr(95).chr(49).chr(95).chr(50)]);
+					$temp['expenseCouponAmt'] = abs(CommonTools::getEmptyNum($iaoWd[$rowsTempObj['agency_id'].chr(95).chr(50).chr(95).chr(49)]))
+									+ CommonTools::getEmptyNum($iaoWd[$rowsTempObj['agency_id'].chr(95).chr(50).chr(95).chr(50)]);
+					$temp['availableNiuAmt'] = $rowsTempObj['balance'];
+					$temp['availableCouponAmt'] = $rowsTempObj['coupon_balance'];
+					$temp['niuAmt'] = $temp['availableNiuAmt'] - $temp['chargeNiuAmt'] + $temp['expenseNiuAmt'];
+					$temp['couponAmt'] = $temp['availableCouponAmt'] - $temp['chargeCouponAmt'] + $temp['expenseCouponAmt'];
+					array_push($rows, $temp);
+				}
+				unset($rowsTemp);
+				$result['rows'] = $rows;
+			}
+			
+			// 结束监控示例
+			BPMoniter::endMoniter($posTry, $flag, __LINE__);
+		} catch (BBException $e) {
+			BPMoniter::endMoniter($posTry, Symbol::BPM_ONE_MILLION, __LINE__);
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+        	// 抛异常
+			throw new BBException($e->getCode(), $e->getMessage(), BPMoniter::getMoniter($posTry).Symbol::CONS_DOU_COLON."获取财务报表异常", $e);
+        }
+        
+        // 返回结果
+        return $result; 
+	}
 
 }
 

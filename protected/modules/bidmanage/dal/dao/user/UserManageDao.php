@@ -1584,5 +1584,4 @@ class UserManageDao extends DaoModule
 		return $agencyCon;
 	}
     
-    
 }
