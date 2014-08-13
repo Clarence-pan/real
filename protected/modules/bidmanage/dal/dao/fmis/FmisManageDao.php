@@ -116,13 +116,14 @@ class FmisManageDao extends DaoModule {
 			if (isset($param['accountId'])) {
 				$dySql = $dySql." AND account_id IN (".$param['accountId'].")";
 			}
-			if (!empty($params['startDate']) && empty($params['endDate'])) {
-				$dySql = $dySql." AND DATE_FORMAT(add_time, '%Y-%m-%d') >= '".$params['startDate']."'";
-			} else if (empty($params['startDate']) && !empty($params['endDate'])) {
-				$dySql = $dySql." AND DATE_FORMAT(add_time, '%Y-%m-%d') <= '".$params['endDate']."'";
-			} else if (!empty($params['startDate']) && !empty($params['endDate'])) {
-				$dySql = $dySql." AND DATE_FORMAT(add_time, '%Y-%m-%d') <= '".$params['endDate']."' AND DATE_FORMAT(add_time, '%Y-%m-%d') >= '".$params['startDate']."'";
+			if (!empty($param['startDate']) && empty($param['endDate'])) {
+				$dySql = $dySql." AND DATE_FORMAT(add_time, '%Y-%m-%d') >= '".$param['startDate']."'";
+			} else if (empty($param['startDate']) && !empty($param['endDate'])) {
+				$dySql = $dySql." AND DATE_FORMAT(add_time, '%Y-%m-%d') <= '".$param['endDate']."'";
+			} else if (!empty($param['startDate']) && !empty($param['endDate'])) {
+				$dySql = $dySql." AND DATE_FORMAT(add_time, '%Y-%m-%d') <= '".$param['endDate']."' AND DATE_FORMAT(add_time, '%Y-%m-%d') >= '".$param['startDate']."'";
 			}
+			
 			// 初始化分页SQL
 			$pageSql = "";
 			if (isset($param['start']) && isset($param['limit'])) {
@@ -182,12 +183,12 @@ class FmisManageDao extends DaoModule {
 			if (isset($param['accountId'])) {
 				$dySql = $dySql." AND account_id IN (".$param['accountId'].")";
 			}
-			if (!empty($params['startDate']) && empty($params['endDate'])) {
-				$dySql = $dySql." AND DATE_FORMAT(add_time, '%Y-%m-%d') >= '".$params['startDate']."'";
-			} else if (empty($params['startDate']) && !empty($params['endDate'])) {
-				$dySql = $dySql." AND DATE_FORMAT(add_time, '%Y-%m-%d') <= '".$params['endDate']."'";
-			} else if (!empty($params['startDate']) && !empty($params['endDate'])) {
-				$dySql = $dySql." AND DATE_FORMAT(add_time, '%Y-%m-%d') <= '".$params['endDate']."' AND DATE_FORMAT(add_time, '%Y-%m-%d') >= '".$params['startDate']."'";
+			if (!empty($param['startDate']) && empty($param['endDate'])) {
+				$dySql = $dySql." AND DATE_FORMAT(add_time, '%Y-%m-%d') >= '".$param['startDate']."'";
+			} else if (empty($param['startDate']) && !empty($param['endDate'])) {
+				$dySql = $dySql." AND DATE_FORMAT(add_time, '%Y-%m-%d') <= '".$param['endDate']."'";
+			} else if (!empty($param['startDate']) && !empty($param['endDate'])) {
+				$dySql = $dySql." AND DATE_FORMAT(add_time, '%Y-%m-%d') <= '".$param['endDate']."' AND DATE_FORMAT(add_time, '%Y-%m-%d') >= '".$param['startDate']."'";
 			}
 			// 初始化分页SQL
 			$pageSql = "";
