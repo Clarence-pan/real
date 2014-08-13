@@ -65,6 +65,9 @@ class BBLog extends DaoModule {
 			$errorDataStr = substr($errorDataStr, 0, 290);
 			$errorDataStr = $errorDataStr.Sundry::SUSPENMSION;
 		}
+		$errorDataStr = str_replace("\"",Symbol::EMPTY_STRING,$errorDataStr);
+		$errorMsg = str_replace("\"",Symbol::EMPTY_STRING,$errorMsg);
+		
 		try {
 			// 将日志插入数据库
 			$sql = "INSERT INTO exception_log " .
@@ -93,6 +96,8 @@ class BBLog extends DaoModule {
 		} else {
 			$dbCon = strval($content);
 		}
+		$dbCon = str_replace("\"",Symbol::EMPTY_STRING,$dbCon);
+		$msg = str_replace("\"",Symbol::EMPTY_STRING,$msg);
 
 		try {
 			// 判断是否需要插入附加内容
@@ -148,6 +153,7 @@ class BBLog extends DaoModule {
 		} else {
 			$dbParam = strval($param);
 		}
+		$dbParam = str_replace("\"",Symbol::EMPTY_STRING,$dbParam);
 		
 		try {
 			
@@ -172,7 +178,7 @@ class BBLog extends DaoModule {
 			// 将日志插入数据库
 			$sql = "INSERT INTO interface_log_".$tableNum .
 					"	(log_pos,url,way,params,params_id,data_count,rows_count,success,use_time,add_time)" .
-					"	VALUES('".$posOrUid."', '".$url."', '".$way."', \"".$dbParam."\", ".$paramsId.", ".$dataCount.", ".$rowsCount.", ".$success.", ".$useTime.", '".date('Y-m-d H:i:s')."');";
+					"	VALUES(\"".$posOrUid."\", \"".$url."\", '".$way."', \"".$dbParam."\", ".$paramsId.", ".$dataCount.", ".$rowsCount.", ".$success.", ".$useTime.", '".date('Y-m-d H:i:s')."');";
 			$this->dbRW->createCommand($sql)->execute();
 		} catch(Exception $e) {}
 		// 还原标记
