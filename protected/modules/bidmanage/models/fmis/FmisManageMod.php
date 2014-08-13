@@ -316,10 +316,12 @@ class FmisManageMod {
 				}
 				
 				// 查询财务
-				$fmisParam['agency_id'] = $user['vendorId'];
+				$fmisParam['agency_id'] = intval($user['vendorId']);
 				$fmisParam['start_date'] = $queryParam['startDate'];
 				$fmisParam['end_date'] = $queryParam['endDate'];
-				$fmisParam['remark'] = chr(48);
+				$fmisParam['remark'] = intval(chr(48));
+				$fmisParam['start'] = Symbol::MINUS_ONE;
+				$fmisParam['limit'] = Symbol::MINUS_ONE;
 				$fmisDb = FinanceIao::getExpenseInfo($fmisParam);
 				
 				// 查询本地其他扣费的fmisId
@@ -417,10 +419,10 @@ class FmisManageMod {
 				}
 				
 				// 查询财务
-				$fmisParam['agency_id'] = $user['vendorId'];
+				$fmisParam['agency_id'] = intval($user['vendorId']);
 				$fmisParam['start_date'] = $queryParam['startDate'];
 				$fmisParam['end_date'] = $queryParam['endDate'];
-				$fmisParam['remark'] = chr(49);
+				$fmisParam['remark'] = intval(chr(49));
 				$fmisParam['start'] = $param['start'];
 				$fmisParam['limit'] = $param['limit'];
 				$fmisDb = FinanceIao::getExpenseInfo($fmisParam);
