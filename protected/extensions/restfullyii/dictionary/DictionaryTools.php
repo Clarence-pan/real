@@ -159,15 +159,48 @@ class DictionaryTools {
                 $result = BusinessType::EXPENSE_CLS_PACK_NAME;
                 break;
             case chr(51):
-            	// 3   线下          
+            	// 3   线下
                 $result = BusinessType::EXPENSE_OFFLINE_NAME;
                 break;
             case chr(52):
-            	// 4   过期            
+            	// 4   过期
                 $result = BusinessType::EXPENSE_OVERDUE_NAME;
                 break;
             default:
                 $result = BusinessType::NO_NAME;
+                break;
+        }
+        return $result;
+    }
+
+    /*
+     * 根据广告位类型获取广告位名称
+     */
+    public static function getAdKeyName($params) {
+        switch (intval($params)) {
+            case BusinessType::INDEX_CHOSEN_ALL_TYPE:
+                $result = BusinessType::INDEX_CHOSEN_NAME;
+                break;
+            case BusinessType::SEARCH_COMPLEX_TYPE:
+                $result = BusinessType::SEARCH_COMPLEX_NAME;
+                break;
+            case BusinessType::SPECIAL_SUBJECT_TYPE:
+                $result = BusinessType::SPECIAL_SUBJECT_NAME;
+                break;
+            case BusinessType::CLASS_RECOMMEND_FIRST_TYPE:
+                $result = BusinessType::CLASS_RECOMMEND_FIRST_NAME;
+                break;
+            case BusinessType::CLASS_RECOMMEND_SECOND_TYPE:
+                $result = BusinessType::CLASS_RECOMMEND_SECOND_NAME;
+                break;
+            case BusinessType::BRAND_ZONE_TYPE:
+                $result = BusinessType::BRAND_ZONE_NAME;
+                break;
+            case BusinessType::CHANNEL_CHOSEN_TYPE:
+                $result = BusinessType::CHANNEL_CHOSEN_NAME;
+                break;
+            default:
+                $result = chr(0);
                 break;
         }
         return $result;

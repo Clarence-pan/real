@@ -10,6 +10,7 @@ class BusinessType{
     /*** 广告位类型 start ***/
     //首页_全部
     const INDEX_CHOSEN_ALL ="index_chosen_all";
+
     //首页
     const INDEX_CHOSEN ="index_chosen";
 
@@ -27,6 +28,54 @@ class BusinessType{
 
     //频道页
     const CHANNEL_CHOSEN = "channel_chosen";
+
+    //首页_全部
+    const INDEX_CHOSEN_ALL_TYPE = 1;
+
+    //搜索页
+    const SEARCH_COMPLEX_TYPE = 3;
+
+    //专题页
+    const SPECIAL_SUBJECT_TYPE = 4;
+
+    //分类页
+    const CLASS_RECOMMEND_FIRST_TYPE = 2;
+
+    //分类页
+    const CLASS_RECOMMEND_SECOND_TYPE = 21;
+
+    //品牌专区
+    const BRAND_ZONE_TYPE = 6;
+
+    //频道页
+    const CHANNEL_CHOSEN_TYPE = 5;
+
+    //所有广告位类型数组
+    public static $ADKEY_TYPE_ARRAY = array(1,2,3,4,5,6,21);
+
+    //首页_全部
+    const INDEX_CHOSEN_ALL_NAME = "首页-全部";
+
+    //首页
+    const INDEX_CHOSEN_NAME = "首页";
+
+    //搜索页
+    const SEARCH_COMPLEX_NAME = "搜索页";
+
+    //专题页
+    const SPECIAL_SUBJECT_NAME = "专题页";
+
+    //分类页
+    const CLASS_RECOMMEND_FIRST_NAME = "分类页";
+
+    //分类页
+    const CLASS_RECOMMEND_SECOND_NAME = "分类页";
+
+    //品牌专区
+    const BRAND_ZONE_NAME = "品牌专区";
+
+    //频道页
+    const CHANNEL_CHOSEN_NAME = "频道页";
     /*** 广告位类型 end ***/
 
     /*** 产品类型 start ***/

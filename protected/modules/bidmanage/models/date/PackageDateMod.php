@@ -332,61 +332,40 @@ class PackageDateMod {
 		}
 		// 过滤ID参数
 		$paramIdArr = substr($paramIdArr, 0, strlen($paramIdArr) - 1);
-        // 查询打包时间的其它广告位信息
-        $adRe = $this->packageDateDao->queryAdInfo($paramIdArr);
-        // 查询打包时间的首页广告位信息
-        $indexAdRe = $this->packageDateDao->queryIndexAd($paramIdArr);
-        if (!empty($indexAdRe)) {
-            $adRe = array_merge($adRe,$indexAdRe);
-        }
-        // 查询打包时间的频道页广告位信息
-        $channelAdRe = $this->packageDateDao->queryChannelAd($paramIdArr);
-        if (!empty($indexAdRe)) {
-            $adRe = array_merge($adRe,$channelAdRe);
-        }
-        // 查询打包时间的分类页广告位信息
-        $clsrecomAdRe = $this->packageDateDao->queryClsrecomAd($paramIdArr);
-        $adRe = array_merge($adRe,$clsrecomAdRe);
-        
+
+        // 查询打包时间的广告位信息
+        $adRe = $this->packageDateDao->queryAdInfoNew($paramIdArr);
+
+        // 初始化匹配数组$finalResult
+        $finalResult = array();
 		// 若全部没有打包时间广告位信息，则直接返回数据
 		if (empty($adRe) || null == $adRe) {
 			// 整合结果
 			$reData['rows'] = $result;
 			// 返回结果
 			return $reData;
-		}
+		} else {
+            // 设置匹配数组$finalResult
+            foreach ($adRe as $eachPos) {
+                $finalResult[intval($eachPos['show_date_id']) . '_' . intval($eachPos['ad_key_type'])] = $eachPos['show_date_id'];
+            }
+        }
         // 循环整合列表结果集
         foreach($result as $k => $reObj) {
             // 初始化临时结果集合
             $tempArr = array();
 
-            $indexChosenSignal = 0;
-            $channelChosenSignal = 0;
+            // 遍历广告位类型数组，生成mappingKey
+            foreach (BusinessType::$ADKEY_TYPE_ARRAY as $tempTypeArr) {
+                $mappingKey = intval($reObj['id']) . '_' . intval($tempTypeArr);
 
-            foreach($adRe as $adObj) {
-                // 如果改打包时间有广告位竞拍信息，则添加竞拍信息
-                if ($reObj['id'] == $adObj['show_date_id']) {
+                // 如匹配则设置返回广告位名称
+                if ($finalResult[$mappingKey]) {
+                    $adObj['ad_name'] = DictionaryTools::getAdKeyName($tempTypeArr);
+                    array_push($tempArr, $adObj);
+                }
+            }
 
-                    if(strpos($adObj['ad_key'], 'index_chosen') !== false && 'index_chosen' != $adObj['ad_key'] && $indexChosenSignal == 0){
-                        $indexChosenSignal = 1;
-                        array_push($tempArr, array(
-                            'ad_name' => '首页-全部',
-                            'show_date_id' => $adObj['show_date_id'],
-                        ));
-                    } else if(strpos($adObj['ad_key'], 'channel_chosen') !== false && 'channel_chosen' != $adObj['ad_key'] && $channelChosenSignal == 0){
-                        $channelChosenSignal = 1;
-                        array_push($tempArr, array(
-                            'ad_name' => '频道页-全部',
-                            'show_date_id' => $adObj['show_date_id'],
-                        ));
-                    } else if ('index_chosen' == $adObj['ad_key'] || 'class_recommend' == $adObj['ad_key'] || 'search_complex' == $adObj['ad_key'] || 'brand_zone' == $adObj['ad_key']) {
-                    	// 添加临时结果集
-						array_push($tempArr, $adObj);
-                    }
-
-                    
-				}
-			}
 			// 设置广告位信息
 			$result[$k]['ad_info']=$tempArr;
 		}

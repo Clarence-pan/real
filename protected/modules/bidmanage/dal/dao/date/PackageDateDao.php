@@ -528,6 +528,47 @@ class PackageDateDao extends DaoModule {
 		}
 	}
 
+    /**
+     * 查询打包时间的广告位信息
+     *
+     * @param $param
+     * @return $row
+     */
+    public function queryAdInfoNew($param) {
+        // 初始化返回结果
+        $result = array();
+
+        try {
+            // 初始化sql语句
+            $sql = "SELECT
+                    id,
+                    show_date_id,
+                    ad_key_type
+                  FROM
+                    ba_ad_position
+                  WHERE
+                    del_flag=0
+                  AND
+                    show_date_id IN (".$param.")
+                  AND
+                    ad_key_type in (" . implode(chr(44), BusinessType::$ADKEY_TYPE_ARRAY).")
+                  GROUP BY
+                    show_date_id,ad_key_type";
+
+            // 查询并返回参数
+            $result = $this->dbRO->createCommand($sql)->queryAll();
+        } catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+            // 抛异常
+            throw new BBException(ErrorCode::ERR_231550, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231550)], $result.Symbol::CONS_DOU_COLON."向数据库查询打包时间的广告位信息异常", $e);
+        }
+
+        // 返回结果
+        return $result;
+    }
+
 	/**
 	 * 查询除首页和频道页之外的打包时间广告位信息
 	 * 
