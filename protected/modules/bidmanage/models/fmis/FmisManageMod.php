@@ -245,8 +245,6 @@ class FmisManageMod {
 			
 			// 整合参数
 			$queryParam['accountId'] = $param['accountId'];
-			$queryParam['startDate'] = Symbol::EMPTY_STRING;
-			$queryParam['endDate'] = Symbol::EMPTY_STRING;
 			if (empty($param['startDate']) && empty($param['endDate'])) {
 				$queryParam['startDate'] = date('Y-m-d',time() - 6*24*60*60);
 				$queryParam['endDate'] = date(Sundry::TIME_Y_M_D);
@@ -329,13 +327,11 @@ class FmisManageMod {
 				$reBid = $this->manageDao->getBidExpenseInfo($queryParam);
 				// 查询分类页打包消耗
 				$rePack = $this->manageDao->getPackExpenseInfo($queryParam);
-				
 				// 整合数据
 				if (!empty($fmisDb['rows']) || !empty($fmisDb['rowsCharge'])) {
 					
 					// 初始化临时结果集
 					$tempRe = array();
-					
 					// 获取fmisId
 					$fmisId = array();
 					if (!empty($fmisDb['rows'])) {
