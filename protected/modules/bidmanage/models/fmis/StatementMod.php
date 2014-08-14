@@ -556,7 +556,7 @@ class StatementMod {
 			$fmisParam['startDate'] = Symbol::EMPTY_STRING;
 			$fmisParam['endDate'] = Symbol::EMPTY_STRING;
 			if (empty($param['startDate']) && empty($param['endDate'])) {
-				$fmisParam['startDate'] = date(Sundry::TIME_Y_M_D, strtotime('-6 d',date(Sundry::TIME_Y_M_D)));
+				$queryParam['startDate'] = date('Y-m-d',time() - 6*24*60*60);
 				$fmisParam['endDate'] = date(Sundry::TIME_Y_M_D);
 			}
 			if (!empty($param['startDate'])) {
