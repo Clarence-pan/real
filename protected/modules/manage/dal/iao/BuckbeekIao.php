@@ -1204,7 +1204,7 @@ class BuckbeekIao {
         $client = new RESTClient();
         $url = Yii::app()->params['BB_HOST'].'bb/public/user/fmischarts';
         try {
-            $response = $client->post($url, $params);
+            $response = $client->get($url, $params);
         }catch(Exception $e) {
             Yii::log($e, 'warning');
             return array(array(), false, 230115, '接口调用失败！');
