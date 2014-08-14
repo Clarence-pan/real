@@ -155,6 +155,7 @@ class FmisManageDao extends DaoModule {
 							add_time 
 						DESC ".
 						$pageSql;
+						
 			$result['rows'] = $this->executeSql($sqlRows, self::ALL);
 			
 		} catch (BBException $e) {
@@ -224,6 +225,7 @@ class FmisManageDao extends DaoModule {
 							add_time 
 						DESC ".
 						$pageSql;
+					
 			$result['rows'] = $this->executeSql($sqlRows, self::ALL);
 			
 		} catch (BBException $e) {

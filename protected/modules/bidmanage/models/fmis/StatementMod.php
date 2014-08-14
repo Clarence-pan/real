@@ -542,28 +542,24 @@ class StatementMod {
 			$flag = Symbol::BPM_EIGHT_HUNDRED;
 			
 			// 整合参数
-			$fmisParam['isExcel'] = $param['isExcel'];
+			$fmisParam['is_excel'] = $param['isExcel'];
 			$fmisParam['start'] = $param['start'];
 			$fmisParam['limit'] = $param['limit'];
-			$fmisParam['agencyId'] = intval(chr(48));
 			if (!empty($param['agencyId'])) {
-				$fmisParam['agencyId'] = $param['agencyId'];
+				$fmisParam['agency_id'] = $param['agencyId'];
 			}
-			$fmisParam['agencyName'] = Symbol::EMPTY_STRING;
 			if (!empty($param['agencyName'])) {
-				$fmisParam['agencyName'] = $param['agencyName'];
+				$fmisParam['agency_name'] = $param['agencyName'];
 			}
-			$fmisParam['startDate'] = Symbol::EMPTY_STRING;
-			$fmisParam['endDate'] = Symbol::EMPTY_STRING;
 			if (empty($param['startDate']) && empty($param['endDate'])) {
-				$queryParam['startDate'] = date('Y-m-d',time() - 6*24*60*60);
-				$fmisParam['endDate'] = date(Sundry::TIME_Y_M_D);
+				$fmisParam['start_date'] = date('Y-m-d',time() - 6*24*60*60);
+				$fmisParam['end_date'] = date(Sundry::TIME_Y_M_D);
 			}
 			if (!empty($param['startDate'])) {
-				$fmisParam['startDate'] = $param['startDate'];
+				$fmisParam['start_date'] = $param['startDate'];
 			}
 			if (!empty($param['endDate'])) {
-				$fmisParam['endDate'] = $param['endDate'];
+				$fmisParam['end_date'] = $param['endDate'];
 			}
 			
 			// 获取财务系统报表信息
@@ -609,7 +605,7 @@ class StatementMod {
 				foreach ($rowsTemp as $rowsTempObj) {
 					$temp = array();
 					$temp['agencyId'] = $rowsTempObj['agency_id'];
-					$temp['agencyName'] = $rowsTempObj['agency_name'];
+					$temp['agencyName'] = $rowsTempObj['account_name'];
 					$temp['chargeNiuAmt'] = CommonTools::getEmptyNum($iaoWd[$rowsTempObj['agency_id'].chr(95).chr(48).chr(95).chr(48)])
 									+ CommonTools::getEmptyNum($iaoWd[$rowsTempObj['agency_id'].chr(95).chr(49).chr(95).chr(48)]);
 					$temp['chargeCouponAmt'] = CommonTools::getEmptyNum($iaoWd[$rowsTempObj['agency_id'].chr(95).chr(50).chr(95).chr(48)]);

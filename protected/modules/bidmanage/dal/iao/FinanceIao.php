@@ -289,15 +289,7 @@ class FinanceIao {
 	    $url = Yii::app()->params['FMIS_HOST'] . 'restfulApi/AgencyCount/';
 	    $params = array(
 	        'func' => 'getNGCharts',
-	        'params' => array(
-	            'start_date' => $reqParams['startDate'],
-	            'end_date' => $reqParams['endDate'],
-	            'agency_id' => $reqParams['agencyId'],
-	            'agency_name' => $reqParams['agencyName'],
-	            'is_excel' => $reqParams['isExcel'],
-	            'start' => $reqParams['start'],
-	            'limit' => $reqParams['limit'],
-	        ),
+	        'params' => $reqParams,
 	    );
 	    
 	    // 开启监控
