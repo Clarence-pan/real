@@ -42,7 +42,6 @@ class UserManageDao extends DaoModule
             ->from('bb_account')
             ->where('del_flag=0 AND state=0'.$condSqlSegment, $paramsMapSegment)
             ->queryRow();
-        var_dump($params,$condSqlSegment, $paramsMapSegment,$user);die;
         return $user;
     }
 
