@@ -212,9 +212,10 @@ class StatementController extends restfulServer{
 						    }
 						    fputcsv($fp, $list);
 						}
-			        } else {
-			        	break;
-			        }
+			        } 
+//			        else {
+//			        	break;
+//			        }
 		        	// $start += 500;
 		        	
 //		        	if($start > $count){
