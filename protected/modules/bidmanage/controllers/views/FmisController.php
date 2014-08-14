@@ -167,7 +167,7 @@ class FmisController extends restUIServer {
 				&& !empty($data['limit']) && is_numeric($data['start']) && is_numeric($data['limit']) ) {
 					
 				// 查询财务账户报表
-				$data['data'] = $this->getAccountId();
+				$data['accountId'] = $this->getAccountId();
 				$resultMod = $this->fmis->getExpenseInfo($data);
 				
 				// 整合结果，自定义编码和语句

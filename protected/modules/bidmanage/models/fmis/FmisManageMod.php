@@ -309,7 +309,6 @@ class FmisManageMod {
 			} else if (intval(chr(51)) == $expenseType) {
 				// 线下扣款
 				// 查询供应商ID
-				var_dump($param);die;
 				$user = $this->userManage->readUser(array('id' => $param['accountId']));
 				if (empty($user) || empty($user['vendorId'])) {
 					// 抛异常
