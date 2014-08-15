@@ -42,6 +42,7 @@ class restUIServer extends restfulServer {
 				$posM = BPMoniter::createMoniter(__METHOD__.'::'.__LINE__);
 //                $response = $client->get($url, $params);
 				$response = $client->post($url, $params);
+				var_dump($response);die;
 				BPMoniter::endMoniter($posM, 1000, __METHOD__.'::'.__LINE__);
             }
         }catch(Exception $e) {
