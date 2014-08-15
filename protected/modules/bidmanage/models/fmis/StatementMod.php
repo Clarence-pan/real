@@ -605,7 +605,7 @@ class StatementMod {
 				foreach ($rowsTemp as $rowsTempObj) {
 					$temp = array();
 					$temp['agencyId'] = $rowsTempObj['agency_id'];
-					$temp['agencyName'] = $rowsTempObj['account_name'];
+					$temp['agencyName'] = $rowsTempObj['agency_name'];
 					$temp['chargeNiuAmt'] = CommonTools::getEmptyNum($iaoWd[$rowsTempObj['agency_id'].chr(95).chr(48).chr(95).chr(48)])
 									+ CommonTools::getEmptyNum($iaoWd[$rowsTempObj['agency_id'].chr(95).chr(49).chr(95).chr(48)]);
 					$temp['chargeCouponAmt'] = CommonTools::getEmptyNum($iaoWd[$rowsTempObj['agency_id'].chr(95).chr(50).chr(95).chr(48)]);
