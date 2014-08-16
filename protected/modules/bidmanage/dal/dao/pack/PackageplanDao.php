@@ -621,9 +621,9 @@ class PackageplanDao extends DaoModule {
 		            'plan_price' => floatval($param['planPrice']),
 		            'end_date' => strval($param['endDate']),
 		            'is_agency_submit' => intval($param['isAgencySubmit']),
-		            'add_uid' => intval(chr(49)),
+		            'add_uid' => $param['uid'],
 		            'add_time' => date(Sundry::TIME_Y_M_D_H_I_S),
-		            'update_uid' => intval(chr(49)),
+		            'update_uid' => $param['uid'],
 		            'update_time' => date(Sundry::TIME_Y_M_D_H_I_S)
 		        ));
 		        $lastID = $this->dbRW->lastInsertID;
@@ -632,8 +632,8 @@ class PackageplanDao extends DaoModule {
 		        $result = $this->dbRW->createCommand()->insert('pack_log', array(
 		            'pack_plan_id' => $lastID,
 		            'type' => intval(chr(51)),
-		            'content' => "新建打包计划",
-		            'add_uid' => intval(chr(49)),
+		            'content' => $param['nickname']."新建打包计划",
+		            'add_uid' => $param['uid'],
 		            'add_time' => date(Sundry::TIME_Y_M_D_H_I_S)
 		        ));
 		        
@@ -675,7 +675,7 @@ class PackageplanDao extends DaoModule {
 		        'plan_price' => floatval($param['planPrice']),
 		        'is_agency_submit' => intval($param['isAgencySubmit']),
 		        'end_date' => strval($param['endDate']),
-		        'update_uid' => intval(chr(49)),
+		        'update_uid' => $param['uid'],
 		        'update_time' => date(Sundry::TIME_Y_M_D_H_I_S)
 		    ), $condSqlSegment);
 		        
@@ -683,8 +683,8 @@ class PackageplanDao extends DaoModule {
 		    $result = $this->dbRW->createCommand()->insert('pack_log', array(
 		        'pack_plan_id' => intval($param['packPlanId']),
 		        'type' => intval(chr(52)),
-		        'content' => "更新打包计划",
-		        'add_uid' => intval(chr(49)),
+		        'content' => $param['nickname']."更新打包计划",
+		        'add_uid' => $param['uid'],
 		        'add_time' => date(Sundry::TIME_Y_M_D_H_I_S)
 		    ));
 		        
@@ -717,11 +717,21 @@ class PackageplanDao extends DaoModule {
 			// 初始化更新打包计划表筛选条件
 			$condSqlSegment = ' id = '.$param['packPlanId'];
 			
+			// 初始化UID
+			$uid = null;
+			$uidName = null;
+			if (!empty($param['uid'])) {
+				$uid = $param['uid'];
+				$uidName = $param['nickname'];
+			} else {
+				$uid = $param['accountId'];
+				$uidName = '供应商'.$param['agencyId'];
+			}
 			// 发布计划
 		    $result = $this->dbRW->createCommand()->update('pack_plan_basic', array(
 		        'status' => $param['status'],
 		    	'release_time' => date(Sundry::TIME_Y_M_D_H_I_S),
-		        'update_uid' => intval(chr(49)),
+		        'update_uid' => $uid,
 		        'update_time' => date(Sundry::TIME_Y_M_D_H_I_S)
 		    ), $condSqlSegment);
 		        
@@ -729,8 +739,8 @@ class PackageplanDao extends DaoModule {
 		    $result = $this->dbRW->createCommand()->insert('pack_log', array(
 		        'pack_plan_id' => intval($param['packPlanId']),
 		        'type' => intval(chr(53)),
-		        'content' => "发布打包计划",
-		        'add_uid' => intval(chr(49)),
+		        'content' => $uidName."发布打包计划",
+		        'add_uid' => $uid,
 		        'add_time' => date(Sundry::TIME_Y_M_D_H_I_S)
 		    ));
 		        
@@ -781,10 +791,11 @@ class PackageplanDao extends DaoModule {
     	$transaction = $this->dbRW->beginTransaction();
 		
 		try {
-			
+			$addLog = ";添加了：";
 			// 新增产品
 			if (!empty($param['toAdd']) && is_array($param['toAdd'])) {
 				foreach ($param['toAdd'] as &$toAddObj) {
+					$addLog = $addLog.$toAddObj['productId'].chr(39);
                     // 获取产品类型
                     $toAddObj['type'] = DictionaryTools::getTypeTool($toAddObj['productType']);
 
@@ -793,14 +804,18 @@ class PackageplanDao extends DaoModule {
 		        		'product_type' => $toAddObj['type'],
 		        		'product_id' => $toAddObj['productId'],
 		        		'start_city_code' => $toAddObj['startCityCode'],
-		        		'add_uid' => intval(chr(49)),
+		        		'add_uid' => $param['uid'],
 		        		'add_time' => date(Sundry::TIME_Y_M_D_H_I_S),
-		        		'update_uid' => intval(chr(49)),
+		        		'update_uid' => $param['uid'],
 		        		'update_time' => date(Sundry::TIME_Y_M_D_H_I_S)
 		    		));
 				}
 			}
+			if (200 < strlen($addLog)) {
+				$addLog = substr($addLog, 0, 200);
+			}
 			
+			$delLog = ";删除了：";
 			// 删除产品
 			if (!empty($param['toDel']) && is_array($param['toDel'])) {
 				$delProductArr = Symbol::EMPTY_STRING;
@@ -808,22 +823,26 @@ class PackageplanDao extends DaoModule {
 		    		$delProductArr = $delProductArr.$toDelObj['productId'].",";
 				}
 				$delProductArr = substr($delProductArr, intval(chr(48)), strlen($delProductArr) - intval(chr(49)));
+				$delLog = $delLog.$delProductArr;
 				// 初始化删除打包计划产品表筛选条件
 				$condSqlSegment = " product_id in (".$delProductArr.") and pack_plan_id =".$param['packPlanId'];	
 				
 				$result = $this->dbRW->createCommand()->update('pack_plan_product', array(
 		        	'del_flag' => intval(chr(49)),
-		        	'update_uid' => intval(chr(49)),
+		        	'update_uid' => $param['uid'],
 		        	'update_time' => date(Sundry::TIME_Y_M_D_H_I_S)
 		    	), $condSqlSegment);
+			}
+			if (200 < strlen($delLog)) {
+				$delLog = substr($delLog, 0, 200);
 			}
 		        
 		    // 插入日志
 		    $result = $this->dbRW->createCommand()->insert('pack_log', array(
 		        'pack_plan_id' => intval($param['packPlanId']),
 		        'type' => intval(chr(53)),
-		        'content' => "修改打包计划线路",
-		        'add_uid' => intval(chr(52)),
+		        'content' => $param['nickname']."修改打包计划线路".$addLog.$delLog,
+		        'add_uid' => $param['uid'],
 		        'add_time' => date(Sundry::TIME_Y_M_D_H_I_S)
 		    ));
 		        
@@ -921,7 +940,7 @@ class PackageplanDao extends DaoModule {
 			$result = $this->dbRW->createCommand()->update('pack_plan_basic', array(
 		       	'fmis_mark' => intval(chr(49)),
 		       	'fmis_id' => $param['fmisId'],
-		       	'update_uid' => intval(chr(49)),
+		       	'update_uid' => $param['uid'],
 		       	'update_time' => date(Sundry::TIME_Y_M_D_H_I_S)
 		   	), $condSqlSegment);
 		   	
@@ -930,8 +949,8 @@ class PackageplanDao extends DaoModule {
 		        'pack_plan_id' => $param['packPlanId'],
 		        'type' => intval(chr(49)),
 		        'num' => $param['packPlanPrice'],
-		        'content' => "财务扣款成功",
-		        'add_uid' => intval(chr(49)),
+		        'content' => $param['nickname']."财务扣款成功",
+		        'add_uid' => $param['uid'],
 		        'add_time' => date(Sundry::TIME_Y_M_D_H_I_S)
 		    ));
 		   	
@@ -965,8 +984,8 @@ class PackageplanDao extends DaoModule {
 		        'pack_plan_id' => $param['packPlanId'],
 		        'type' => intval(chr(49)),
 		        'num' => $param['packPlanPrice'],
-		        'content' => "财务扣款失败",
-		        'add_uid' => intval(chr(49)),
+		        'content' => $param['nickname']."财务扣款失败",
+		        'add_uid' => $param['uid'],
 		        'add_time' => date(Sundry::TIME_Y_M_D_H_I_S)
 		    ));
 		   	
@@ -1027,7 +1046,7 @@ class PackageplanDao extends DaoModule {
 			$condSqlSegment = " id = ".$param['packPlanId'];
 			$result = $this->dbRW->createCommand()->update('pack_plan_basic', array(
 		       	'del_flag' => intval(chr(49)),
-		       	'update_uid' => intval(chr(49)),
+		       	'update_uid' => $param['uid'],
 		       	'update_time' => date(Sundry::TIME_Y_M_D_H_I_S)
 		   	), $condSqlSegment);
 		   	
@@ -1035,7 +1054,7 @@ class PackageplanDao extends DaoModule {
 		   	$condSqlSegment = " pack_plan_id = ".$param['packPlanId'];
 			$result = $this->dbRW->createCommand()->update('pack_plan_product', array(
 		       	'del_flag' => intval(chr(49)),
-		       	'update_uid' => intval(chr(49)),
+		       	'update_uid' => $param['uid'],
 		       	'update_time' => date(Sundry::TIME_Y_M_D_H_I_S)
 		   	), $condSqlSegment);
 		   	
@@ -1044,8 +1063,8 @@ class PackageplanDao extends DaoModule {
 		    $result = $this->dbRW->createCommand()->insert('pack_log', array(
 		        'pack_plan_id' => $param['packPlanId'],
 		        'type' => intval(chr(55)),
-		        'content' => "删除打包计划成功",
-		        'add_uid' => intval(chr(49)),
+		        'content' => $param['nickname']."删除打包计划成功",
+		        'add_uid' => $param['uid'],
 		        'add_time' => date(Sundry::TIME_Y_M_D_H_I_S)
 		    ));
 		   	

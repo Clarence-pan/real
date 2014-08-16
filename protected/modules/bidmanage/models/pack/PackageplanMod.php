@@ -686,6 +686,14 @@ class PackageplanMod {
             // 财务扣费
             $fmisIdDeduct = PackIao::directFinance($fmisParamsArr); 
             
+            if (!empty($param['uid'])) {
+            	$fmisParams['uid'] = $param['uid'];
+            	$fmisParams['nickname'] = $param['nickname']; 
+            } else {
+            	$fmisParams['uid'] = $param['accountId'];
+            	$fmisParams['nickname'] = '供应商'.$param['agencyId'];
+            }
+            
             // 更新财务状态
             if ($fmisIdDeduct) {
             	// 成功
