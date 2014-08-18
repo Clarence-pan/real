@@ -3962,6 +3962,11 @@ class ProductMod {
     	$result['flag'] = Symbol::CONS_TRUE;
     	$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231501)];
     	
+    	// 添加方法开始日志
+    	if ($this->_bbLog->isInfo()) {
+            $this->_bbLog->logMethod($param, $param['nickname'].$param['uid']."修改了包场数据", __METHOD__.'::'.__LINE__, chr(50));
+        }
+    	
     	// 分类处理，新增和编辑
     	if (Sundry::INSERT == $param['saveFlag']) {
     		// 查询城市维度
@@ -4396,10 +4401,9 @@ class ProductMod {
      * 同步包场位置数据
      */
     public function syncBuyout($showDateId) {
-    	$bbLog = new BBLog();
     	// 添加方法开始日志
-    	if ($bbLog->isInfo()) {
-            $bbLog->logMethod("运营计划ID：".$showDateId, "同步包场位置数据", __METHOD__.'::'.__LINE__, chr(50));
+    	if ($this->_bbLog->isInfo()) {
+            $this->_bbLog->logMethod("运营计划ID：".$showDateId, "同步包场位置数据", __METHOD__.'::'.__LINE__, chr(50));
         }
         try {
         	// 清理数据
