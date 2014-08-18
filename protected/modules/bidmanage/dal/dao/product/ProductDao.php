@@ -454,7 +454,7 @@ class ProductDao extends DaoModule {
             }
             $sql .= "WHERE" . $condSql . $orderSql . $limitSql;
 
-            try {var_dump($sql);die;
+            try {
                 $result = $this->executeSql($sql, self::ALL);
             } catch(Exception $e) {
                 // 抛异常
