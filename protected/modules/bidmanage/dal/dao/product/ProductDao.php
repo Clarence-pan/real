@@ -300,10 +300,10 @@ class ProductDao extends DaoModule {
             $condSqlSegment .= ' AND a.account_id IN ('.$condParams['accountId'].')';
         }
         if ($condParams['startDate'] > '0000-00-00') {
-            $condSqlSegment .= " AND c.show_end_date >= " . $condParams['startDate'];
+            $condSqlSegment .= " AND c.show_end_date >= '" . $condParams['startDate'] . "'";
         }
         if ($condParams['endDate']> '0000-00-00') {
-            $condSqlSegment .= " AND c.show_start_date <= " . $condParams['endDate'];
+            $condSqlSegment .= " AND c.show_start_date <= '" . $condParams['endDate'] . "'";
         }
         if ($condParams['showDateId'] > 0) {
             $condSqlSegment .= " AND a.show_date_id = " . $condParams['showDateId'];
