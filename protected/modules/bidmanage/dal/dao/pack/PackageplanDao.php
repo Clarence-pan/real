@@ -203,7 +203,7 @@ class PackageplanDao extends DaoModule {
 					"ORDER BY a.id DESC " .
 					$pageSql;
 			// 查询列表信息
-			return $this->dbRW->createCommand($sql)->queryAll();
+			return $this->dbRO->createCommand($sql)->queryAll();
 		} catch (Exception $e) {
     		// 打印错误日志
     		Yii::log($e);
@@ -328,7 +328,7 @@ class PackageplanDao extends DaoModule {
 					$whereSql .
 					" GROUP BY a.id ) t";
 			// 查询数量
-			return $this->dbRW->createCommand($sql)->queryRow();
+			return $this->dbRO->createCommand($sql)->queryRow();
 		} catch (Exception $e) {
     		// 打印错误日志
     		Yii::log($e);
@@ -375,7 +375,7 @@ class PackageplanDao extends DaoModule {
 						"a.update_time DESC " .
 					$pageSql;
 			// 查询数量
-			return $this->dbRW->createCommand($sql)->queryAll();
+			return $this->dbRO->createCommand($sql)->queryAll();
 		} catch (Exception $e) {
     		// 打印错误日志
     		Yii::log($e);
@@ -412,7 +412,7 @@ class PackageplanDao extends DaoModule {
 					"AND " .
 						"a.id != 0";
 			// 查询数量
-			return $this->dbRW->createCommand($sql)->queryRow();
+			return $this->dbRO->createCommand($sql)->queryRow();
 		} catch (Exception $e) {
     		// 打印错误日志
     		Yii::log($e);
@@ -507,7 +507,7 @@ class PackageplanDao extends DaoModule {
 					"ORDER BY a.update_time DESC ".
 					$pageSql;
 			// 查询列表信息
-			return $this->dbRW->createCommand($sql)->queryAll();
+			return $this->dbRO->createCommand($sql)->queryAll();
 		} catch (Exception $e) {
     		// 打印错误日志
     		Yii::log($e);
@@ -590,7 +590,7 @@ class PackageplanDao extends DaoModule {
 					$whereSql .
 					" ) t ";
 			// 查询列表数量
-			return $this->dbRW->createCommand($sql)->queryRow();
+			return $this->dbRO->createCommand($sql)->queryRow();
 		} catch (Exception $e) {
     		// 打印错误日志
     		Yii::log($e);
@@ -1284,7 +1284,7 @@ class PackageplanDao extends DaoModule {
 //						"a.status in (1,2) " .
 					" GROUP BY a.id ) t";
 			// 查询计划数量
-			$countPlan = $this->dbRW->createCommand($sqlPlan)->queryRow();
+			$countPlan = $this->dbRO->createCommand($sqlPlan)->queryRow();
 			
 			// 初始化推广中SQL
 			$sqlShowOn = "SELECT COUNT(0) AS countRe " .
@@ -1314,7 +1314,7 @@ class PackageplanDao extends DaoModule {
 							"a.account_id = ".$param['accountId'] .
 					 " ) t";
 			// 查询推广中数量
-			$countShowOn = $this->dbRW->createCommand($sqlShowOn)->queryRow();
+			$countShowOn = $this->dbRO->createCommand($sqlShowOn)->queryRow();
 			
 			// 初始化推广结束SQL
 			$sqlShowOff = "SELECT COUNT(0) AS countRe " .
@@ -1344,7 +1344,7 @@ class PackageplanDao extends DaoModule {
 							"a.account_id = ".$param['accountId'] .
 					 " ) t";
 			// 查询推广结束数量
-			$countShowOff = $this->dbRW->createCommand($sqlShowOff)->queryRow();
+			$countShowOff = $this->dbRO->createCommand($sqlShowOff)->queryRow();
 			
 			// 初始化返回结果
 			$count['plan'] = $countPlan['countRe'];
