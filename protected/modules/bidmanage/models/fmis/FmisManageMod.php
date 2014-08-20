@@ -361,9 +361,9 @@ class FmisManageMod {
 						$tempReObj['niuAmt'] = chr(48);
 						$tempReObj['couponAmt'] = chr(48);
 						if (chr(48) == $chargeExpenseObj['currency_type'] || chr(49) == $chargeExpenseObj['currency_type']) {
-							$tempReObj['niuAmt'] = $chargeExpenseObj['amt'];
+							$tempReObj['niuAmt'] = abs($chargeExpenseObj['amt']);
 						} else if (chr(50) == $chargeExpenseObj['currency_type']) {
-							$tempReObj['couponAmt'] = $chargeExpenseObj['amt'];
+							$tempReObj['couponAmt'] = abs($chargeExpenseObj['amt']);
 						}
 						array_push($tempRe, $tempReObj);
 					}
@@ -374,7 +374,7 @@ class FmisManageMod {
 					$expense = &$fmisDb['rows'];
 					foreach ($expense as $expenseObj) {
 						$tempReObj = array();
-						if (!in_array($expenseObj['id'], $fmisId)) {
+						if (!in_array($expenseObj['id'], $fmisId) && !empty($expenseObj['amt'])) {
 							$tempReObj['expenseTime'] = $expenseObj['add_time'];
 							$tempReObj['expenseType'] = $expenseType;
 							$tempReObj['expenseName'] = $expenseName;
