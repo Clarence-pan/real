@@ -455,7 +455,7 @@ class ProductDao extends DaoModule {
             $sql .= "WHERE" . $condSql . $orderSql . $limitSql;
 
             try {
-                $result = $this->executeSql($sql, self::ALL);
+                $result = $this->executeSql($sql, self::ALLO);
             } catch(Exception $e) {
                 // 抛异常
                 throw new BBException(ErrorCode::ERR_231550, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231550)], BPMoniter::getMoniter($posTry).Symbol::CONS_DOU_COLON.$sql.Symbol::CONS_DOU_COLON."向数据库查询竞拍列表异常", $e);
@@ -529,7 +529,7 @@ class ProductDao extends DaoModule {
             $sql .= "WHERE" . $condSql;
 
             try {
-                $result = $this->executeSql($sql, self::ROW);
+                $result = $this->executeSql($sql, self::ROWO);
             } catch(Exception $e) {
                 // 抛异常
                 throw new BBException(ErrorCode::ERR_231550, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231550)], BPMoniter::getMoniter($posTry).Symbol::CONS_DOU_COLON.$sql.Symbol::CONS_DOU_COLON."向数据库查询竞拍列表异常", $e);

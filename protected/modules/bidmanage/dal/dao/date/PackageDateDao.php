@@ -556,7 +556,7 @@ class PackageDateDao extends DaoModule {
                     show_date_id,ad_key_type";
 
             // 查询并返回参数
-            $result = $this->dbRO->createCommand($sql)->queryAll();
+            $result = $this->executeSql($sql, self::ALLO);
         } catch (BBException $e) {
             // 抛异常
             throw $e;
@@ -569,91 +569,6 @@ class PackageDateDao extends DaoModule {
         return $result;
     }
 
-	/**
-	 * 查询除首页和频道页之外的打包时间广告位信息
-	 * 
-	 * @param $param
-	 * @return $row
-	 */
-	public function queryAdInfo($param) {
-		// 初始化sql语句
-		$sql = "SELECT id, ad_key, ad_name, start_city_code, show_date_id, ROUND(floor_price) as floor_price, ad_product_count FROM ba_ad_position WHERE del_flag=0 and show_date_id IN (".$param.") AND ad_key_type in (2, 3, 4, 6)";
-        // 查询并返回参数
-		$row = $this->dbRO->createCommand($sql)->queryAll();
-		// 判断返回结果是否为空
-		if (!empty ($row) && is_array($row)) {
-			// 不为空，返回查询结果
-			return $row;
-		} else {
-			// 为空，返回空数组
-			return array ();
-		}
-	}
-
-    /**
-     * 查询首页打包时间广告位信息
-     *
-     * @param $param
-     * @return $row
-     */
-    public function queryIndexAd($param) {
-        // 初始化sql语句
-        $sql = "SELECT id, ad_key, ad_name, start_city_code, show_date_id, ROUND(floor_price) as floor_price, ad_product_count FROM ba_ad_position WHERE del_flag=0 and show_date_id IN (".$param.") AND ad_key_type=1 GROUP BY show_date_id";
-        // 查询并返回参数
-        $row = $this->dbRO->createCommand($sql)->queryAll();
-        // 判断返回结果是否为空
-        if (!empty ($row) && is_array($row)) {
-            // 不为空，返回查询结果
-            return $row;
-        } else {
-            // 为空，返回空数组
-            return array ();
-        }
-    }
-
-    /**
-     * 查询频道页打包时间广告位信息
-     *
-     * @param $param
-     * @return $row
-     */
-    public function queryChannelAd($param) {
-        // 初始化sql语句
-        $sql = "SELECT id, ad_key, ad_name, start_city_code, show_date_id, ROUND(floor_price) as floor_price, ad_product_count FROM ba_ad_position WHERE del_flag=0 and show_date_id IN (".$param.") AND ad_key_type=5 GROUP BY show_date_id";
-        // 查询并返回参数
-        $row = $this->dbRO->createCommand($sql)->queryAll();
-        // 判断返回结果是否为空
-        if (!empty ($row) && is_array($row)) {
-            // 不为空，返回查询结果
-            return $row;
-        } else {
-            // 为空，返回空数组
-            return array ();
-        }
-    }
-    
-    /**
-     * 查询分类页打包时间广告位信息
-     *
-     * @param $param
-     * @return $row
-     */
-    public function queryClsrecomAd($param) {
-        // 初始化sql语句
-        $sql = "SELECT ad_key, '分类页-全部' as ad_name, show_date_id FROM ba_ad_position WHERE del_flag=0 and show_date_id IN (".$param.") AND ad_key_type = 21  GROUP BY show_date_id";
-        // 查询并返回参数
-        $row = $this->dbRO->createCommand($sql)->queryAll();
-        // 判断返回结果是否为空
-        if (!empty ($row) && is_array($row)) {
-            // 不为空，返回查询结果
-            return $row;
-        } else {
-            // 为空，返回空数组
-            return array ();
-        }
-    }
-    
-	
 	/**
 	 * 查询已勾选的附加信息数据
 	 * 

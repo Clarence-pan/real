@@ -10,6 +10,8 @@ class DaoModule {
     public $dbRO;
     public $dbRW;
 
+    const ALL = 'all';
+
 	const ROW = 'row';
 	
 	const ROWO = 'rowo';
