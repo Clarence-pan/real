@@ -12,9 +12,11 @@ class DaoModule {
 
 	const ROW = 'row';
 	
+	const ROWO = 'rowo';
+	
 	const SROW = 'srow';
 	
-	const ALL = 'all';
+	const ALLO = 'allo';
 	
 	const SALL = 'sall';
 
@@ -41,6 +43,12 @@ class DaoModule {
 	    			break;
 	    		case self::ROW:
 	    			$result = $this->dbRW->createCommand($sql)->queryRow();
+	    			break;
+	    		case self::ALLO:
+	    			$result = $this->dbRO->createCommand($sql)->queryAll();
+	    			break;
+	    		case self::ROWO:
+	    			$result = $this->dbRO->createCommand($sql)->queryRow();
 	    			break;
 	    		case self::SALL:
 	    			foreach ($sql as $sqlObj) {
