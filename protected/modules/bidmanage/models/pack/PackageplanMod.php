@@ -489,9 +489,11 @@ class PackageplanMod {
         	        // 增加上级分类的查找 
         			$webClassParentIdArr = array();
         	        foreach($webClassData as $subItem) {
-        			    foreach($subItem as $iaoObj){
-                			$webClassParentIdArr['webClassId'][] = $iaoObj['parentId'];
-            			}
+                        if (!empty($subItem)) {
+                            foreach($subItem as $iaoObj){
+                                $webClassParentIdArr['webClassId'][] = $iaoObj['parentId'];
+                            }
+                        }
         			}
         			$parentWebClassInfoRows = ProductIao::getWebClassInfo($webClassParentIdArr);
         			
