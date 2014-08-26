@@ -56,7 +56,7 @@ class ChannelDao extends DaoModule {
 		try {
 			// 初始化SQL
 			$sql = "SELECT DISTINCT channel_id AS channelId, channel_name AS channelName
-					FROM ba_ad_position_type WHERE del_flag= 0 start_city_code = ".$param['startCityCode']." AND is_open = 0 AND ad_key_type = 5";
+					FROM ba_ad_position_type WHERE del_flag= 0 AND start_city_code = ".$param['startCityCode']." AND is_open = 0 AND ad_key_type = 5";
 			// 查询供应商信息
 			return $this->dbRW->createCommand($sql)->queryAll();
 		} catch (Exception $e) {
