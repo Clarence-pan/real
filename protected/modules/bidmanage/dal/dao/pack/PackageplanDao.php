@@ -349,7 +349,7 @@ class PackageplanDao extends DaoModule {
 			}
 			// 初始化SQL
 			$sql = "SELECT " .
-						"a.product_type AS productType, a.product_id AS productId, a.start_city_code AS startCityCode, " .
+						"DISTINCT a.product_id AS productId, a.product_type AS productType, a.start_city_code AS startCityCode, " .
 						"IFNULL(b.name, '') AS startCityName, IFNULL(c.product_name, '') AS productName " .
 					"FROM " .
 						"pack_plan_product AS a " .
@@ -390,7 +390,7 @@ class PackageplanDao extends DaoModule {
 	public function queryPlanProductDetailCount($param) {
 		try {
 			// 初始化SQL
-			$sql = "SELECT count(0) as countRe " .
+			$sql = "SELECT count(DISTINCT a.product_id) as countRe " .
 					"FROM " .
 						"pack_plan_product AS a " .
 					"LEFT JOIN " .
