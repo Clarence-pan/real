@@ -92,6 +92,7 @@ class PackageplanController extends restfulServer{
 	 * 保存打包计划线路
 	 */
 	public function doRestPostPackplanproduct($param) {
+		var_dump($param);die;
 		// 保存打包计划线路
 		$result = $this->_packagePlanMod->savePackPlanProduct($param);
 		// 返回结果
