@@ -349,7 +349,7 @@ class PackageplanDao extends DaoModule {
 			}
 			// 初始化SQL
 			$sql = "SELECT " .
-						"DISTINCT a.product_id AS productId, a.product_type AS productType, a.start_city_code AS startCityCode, " .
+						"a.product_id AS productId, a.product_type AS productType, a.start_city_code AS startCityCode, " .
 						"IFNULL(b.name, '') AS startCityName, IFNULL(c.product_name, '') AS productName " .
 					"FROM " .
 						"pack_plan_product AS a " .
@@ -369,8 +369,8 @@ class PackageplanDao extends DaoModule {
 						"a.pack_plan_id = " .$param['packPlanId'].
 					" AND " .
 						"a.del_flag = 0 " .
-					"AND " .
-						"a.id != 0 " .
+					"GROUP BY " .
+						"a.product_id " .
 					"ORDER BY " .
 						"a.update_time DESC " .
 					$pageSql;
@@ -408,9 +408,7 @@ class PackageplanDao extends DaoModule {
 					"WHERE " .
 						"a.pack_plan_id = " .$param['packPlanId'].
 					" AND " .
-						"a.del_flag = 0 " .
-					"AND " .
-						"a.id != 0";
+						"a.del_flag = 0 ";
 			// 查询数量
 			return $this->dbRO->createCommand($sql)->queryRow();
 		} catch (Exception $e) {
