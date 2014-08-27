@@ -94,6 +94,9 @@ class BusinessType{
 
     // 游轮产品类型-招客宝
     const TANK_LOC = 5;
+    
+    // 自驾游产品类型-招客宝
+    const DIY_VIEC_LOC = 8;
 
     // 跟团游产品类型-搜索
     const ROUTE_AGENCY_ROR = 1;

@@ -117,7 +117,7 @@ class PackageplanMod {
 //				    $plaParam['classBrandType'] = 1;
 //				    break;
 //        	}
-			$plaParam['classBrandTypes'] = array(1, 2);
+			$plaParam['classBrandTypes'] = array(1, 2, 8);
 			// 出发城市编码
 			if (!empty($param['startCityCode'])) {
 				$plaParam['cityCode'] = $param['startCityCode'];

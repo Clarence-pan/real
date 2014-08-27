@@ -27,6 +27,9 @@ class DictionaryTools {
             case BusinessType::TANK_ROR:
                 $result = BusinessType::TANK_LOC;
                 break;
+            case BusinessType::DIY_VIEC_ROR:
+                $result = BusinessType::DIY_VIEC_LOC;
+                break;
             case BusinessType::AROUND_ROR:
                 $result = BusinessType::$AROUND_LOC;
                 break;
