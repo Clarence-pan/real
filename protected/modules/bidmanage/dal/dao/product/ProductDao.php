@@ -702,7 +702,7 @@ class ProductDao extends DaoModule {
             $paramsMapSegment = $condition['paramsMapSegment'];
         }
         if ($condParams['bidState'] == 1 || $condParams['bidState'] == 2 || $condParams['bidState'] == -1) {
-            $rows = $this->dbRO->createCommand()
+            $rows = $this->dbRW->createCommand()
                 // 使用distinct来唯一确定数据条数
                 ->select('COUNT(DISTINCT a.ad_key,a.start_city_code,a.web_class,a.search_keyword,a.show_date_id) count')
                 ->from('bid_bid_product a')
@@ -710,7 +710,7 @@ class ProductDao extends DaoModule {
                 ->where($condSqlSegment, $paramsMapSegment)
                 ->queryScalar();
         } elseif ($condParams['bidState'] == 3 || $condParams['bidState'] == 4) {
-            $rows = $this->dbRO->createCommand()
+            $rows = $this->dbRW->createCommand()
                 // 使用distinct来唯一确定数据条数
                 ->select('COUNT(DISTINCT a.ad_key,a.start_city_code,a.web_class,a.search_keyword,a.show_date_id) count')
                 ->from('bid_show_product a')
@@ -803,7 +803,7 @@ class ProductDao extends DaoModule {
             $condSqlSegment .= ' AND search_keyword=:searchKeyword';
             $paramsMapSegment[':searchKeyword'] = $condParams['searchKeyword'];
         }
-        $rows = $this->dbRO->createCommand()
+        $rows = $this->dbRW->createCommand()
                     ->select('id')
                     ->from('bid_bid_product')
                     ->where($condSqlSegment, $paramsMapSegment)
@@ -855,14 +855,14 @@ class ProductDao extends DaoModule {
                     $condSqlSegment .= ' AND bid_mark=:bidMark';
                     $paramsMapSegment[':bidMark'] = $condParams['bidMark'];
                 }
-                $rows = $this->dbRO->createCommand()
+                $rows = $this->dbRW->createCommand()
                     ->select('id,ranking,bid_mark bidMark, login_name loginName')
                     ->from('bid_bid_product')
                     ->where($condSqlSegment, $paramsMapSegment)
                     ->order('ranking')
                     ->queryAll();
             } elseif ($condParams['bidState'] == 3 || $condParams['bidState'] == 4) {
-                $rows = $this->dbRO->createCommand()
+                $rows = $this->dbRW->createCommand()
                     ->select('id,ranking')
                     ->from('bid_show_product')
                     ->where($condSqlSegment, $paramsMapSegment)
@@ -874,7 +874,7 @@ class ProductDao extends DaoModule {
                 $condSqlSegment .= ' AND bid_mark=:bidMark';
                 $paramsMapSegment[':bidMark'] = $condParams['bidMark'];
             }
-            $rows = $this->dbRO->createCommand()
+            $rows = $this->dbRW->createCommand()
                 ->select('id,ranking,CAST(bid_price AS DECIMAL(11,0)) bidPrice,CAST(max_limit_price AS DECIMAL(11,0)) maxLimitPrice,bid_mark bidMark, login_name loginName')
                 ->from('bid_bid_product')
                 ->where($condSqlSegment, $paramsMapSegment)
@@ -921,14 +921,14 @@ class ProductDao extends DaoModule {
         if (!empty($condParams['bidId'])) {
             if ($condParams['bidState'] == 2) {
                 $condSqlSegment .= ' AND bid_id IN ('.trim(implode(',', $condParams['bidId'])).')';
-                $rows = $this->dbRO->createCommand()
+                $rows = $this->dbRW->createCommand()
                     ->select('id,content_type contentType,content_id contentId')
                     ->from('bid_bid_content')
                     ->where($condSqlSegment, $paramsMapSegment)
                     ->queryAll();
             } elseif ($condParams['bidState'] == 3) {
                 $condSqlSegment .= ' AND show_id IN ('.trim(implode(',', $condParams['bidId'])).')';
-                $rows = $this->dbRO->createCommand()
+                $rows = $this->dbRW->createCommand()
                     ->select('id,content_type contentType,content_id contentId')
                     ->from('bid_show_content')
                     ->where($condSqlSegment, $paramsMapSegment)
@@ -1504,7 +1504,7 @@ class ProductDao extends DaoModule {
 		// 初始化SQL语句
 		$sql = "SELECT COUNT(1) AS count_ad, a.ad_key, a.start_city_code, a.search_keyword, a.show_date_id, a.web_class, SUM(a.bid_price) as bid_price, SUM(a.max_limit_price) as max_limit_price,SUM(a.bid_price_coupon) AS bid_price_coupon,SUM(a.bid_price_niu) AS bid_price_niu,SUM(a.max_limit_price_coupon) AS max_limit_price_coupon,SUM(a.max_limit_price_niu) AS max_limit_price_niu, a.show_date_id, CONCAT(b.show_start_date, ' ~ ', b.show_end_date) AS showDate FROM bid_bid_product a LEFT JOIN bid_show_date b ON a.show_date_id = b.id WHERE a.del_flag = 0 AND (a.bid_mark = 2 OR a.bid_mark = 1) AND a.ad_key = '".$param['adKey']."' AND a.show_date_id = ".$param['showDateId']." and a.account_id = ".$param['account_id']." ".$dySql." GROUP BY ad_key, show_date_id";
 		// 查询并返回参数
-		$row = $this->dbRO->createCommand($sql)->queryRow();
+		$row = $this->dbRW->createCommand($sql)->queryRow();
 		// 判断返回结果是否为空
 		if (!empty ($row) && is_array($row)) {
 			// 不为空，返回查询结果
@@ -1531,7 +1531,7 @@ class ProductDao extends DaoModule {
 		// 初始化SQL语句
 		$sql = "SELECT IFNULL(SUM(b.bid_price), 0) AS floor_price FROM bid_bid_product a LEFT JOIN bid_bid_vas b ON a.id = b.bid_id AND b.del_flag = 0 LEFT JOIN bid_show_date c ON a.show_date_id = c.id WHERE a.account_id = ".$param['account_id']." AND a.show_date_id = ".$param['showDateId']." AND (a.bid_mark = 2 OR (a.bid_mark=1 AND DATE_FORMAT(NOW(), '%Y-%m-%d') <= c.show_end_date)) AND a.del_flag = 0 AND c.del_flag = 0".$dySql;
 		// 查询并返回参数
-		$row = $this->dbRO->createCommand($sql)->queryRow();
+		$row = $this->dbRW->createCommand($sql)->queryRow();
 		// 判断返回结果是否为空
 		if (!empty ($row) && is_array($row)) {
 			// 不为空，返回查询结果
@@ -1576,7 +1576,7 @@ class ProductDao extends DaoModule {
 		// 初始化sql语句
 		$sql = "SELECT a.id, a.product_type, a.product_id, a.show_date_id, a.bid_mark, a.fmis_mark, ROUND(a.bid_price) AS bid_price, ROUND(a.max_limit_price) AS max_limit_price, a.start_city_code, a.web_class, a.search_keyword, a.ad_key, a.ranking as bid_ranking, IFNULL(b.product_name, '') AS product_name, IFNULL(b.agency_product_name, '') AS agency_product_name, IFNULL(b.checker_flag, 0) AS checker_flag, a.login_name FROM bid_bid_product a LEFT JOIN bid_product b ON a.product_id = b.product_id AND a.product_type = b.product_type and b.account_id=".$param['account_id']." AND b.del_flag = 0 LEFT JOIN bid_show_date c ON a.show_date_id = c.id WHERE a.del_flag = 0 AND a.ad_key='".$param['ad_key']."' ".$dySql." AND (a.bid_mark = 2 OR (a.bid_mark=1 AND DATE_FORMAT(NOW(), '%Y-%m-%d') <= c.show_end_date)) AND a.show_date_id=".$param['show_date_id']." and a.account_id=".$param['account_id']." ORDER BY a.ranking ASC LIMIT ".$param['start'].",".$param['limit'];
 		// 查询并返回参数
-		$row = $this->dbRO->createCommand($sql)->queryAll();
+		$row = $this->dbRW->createCommand($sql)->queryAll();
 		// 判断返回结果是否为空
 		if (!empty ($row) && is_array($row)) {
 			// 不为空，返回查询结果
@@ -1613,7 +1613,7 @@ class ProductDao extends DaoModule {
 		// 初始化sql语句
 		$sql = "SELECT count(*) AS list_count FROM bid_bid_product a LEFT JOIN bid_product b ON a.product_id = b.product_id AND a.product_type = b.product_type and b.account_id=".$param['account_id']." AND b.del_flag = 0 LEFT JOIN bid_show_date c ON a.show_date_id = c.id WHERE a.del_flag = 0 AND a.ad_key='".$param['ad_key']."' ".$dySql." AND (a.bid_mark = 2 OR (a.bid_mark=1 AND DATE_FORMAT(NOW(), '%Y-%m-%d') <= c.show_end_date)) AND a.show_date_id=".$param['show_date_id']." and a.account_id=".$param['account_id'];
 		// 查询并返回参数
-		$row = $this->dbRO->createCommand($sql)->queryRow();
+		$row = $this->dbRW->createCommand($sql)->queryRow();
 		// 判断返回结果是否为空
 		if (!empty ($row) && is_array($row)) {
 			// 不为空，返回查询结果
