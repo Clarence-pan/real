@@ -32,7 +32,7 @@ class CpsDao extends DaoModule {
 							del_flag = 0 ".
 						$dySql;
 					
-			$result = $this->executeSql($sqlRows, self::ALL);
+			$result = $this->executeSql($sqlRows, self::ALLO);
 			
 		} catch (BBException $e) {
             // 抛异常
