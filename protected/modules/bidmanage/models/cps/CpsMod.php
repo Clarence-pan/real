@@ -40,7 +40,6 @@ class CpsMod {
 	 * 获取需要编辑的CPS产品
 	 */
 	function getCpsProduct($param) {
-		$param['agencyId'] = 1169;
 		// 填充日志
 		if ($this->bbLog->isInfo()) {
 			$this->bbLog->logMethod($param, $param['accountId']."获取需要编辑的CPS产品", __METHOD__.Symbol::CONS_DOU_COLON.__LINE__, chr(50));
