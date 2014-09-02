@@ -870,6 +870,9 @@ class PackageplanMod {
 					        case 6:
 					            $routesObj['type'] = 33;
 					            break;
+					        case 8:
+					            $routesObj['type'] = 8;
+					            break;
 					        case 10:
 					            $routesObj['type'] = 4;
 					            break;
