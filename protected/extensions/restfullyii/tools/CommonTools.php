@@ -17,5 +17,12 @@ class CommonTools {
 		return empty($param) ? intval(chr(48)) : intval($param);
 	}
 	
+	/**
+	 * 获取是或否
+	 */
+	public static function getIsOrNot($param) {
+		return empty($param) ? intval(chr(48)) : intval(chr(49));
+	}
+	
 }
 ?>

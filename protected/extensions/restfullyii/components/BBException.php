@@ -42,7 +42,7 @@ class BBException extends Exception {
 		// 填充日志
 		$BBLog = new BBLog();
 		if ($BBLog->isInfo()) {
-			$BBLog->logException($this->getErrCode(), $this->getErrMessage, $this->errorData, $this->errorPos);
+			$BBLog->logException($this->getErrCode(), $this->getErrMessage(), $this->errorData, $this->errorPos);
 		}
 	}
 	

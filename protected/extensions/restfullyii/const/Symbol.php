@@ -54,8 +54,14 @@
  	// 24
  	const TWENTY_FOUR = 24;
  	
+ 	// 200
+ 	const TWO_HUNDRED = 200;
+ 	
  	// 800
  	const BPM_EIGHT_HUNDRED = 800;
+ 	
+ 	// 1000
+ 	const ONE_THOUSAND = 1000;
  	
  	// 20000
  	const BPM_TWENTY_THOUSAND = 20000;		

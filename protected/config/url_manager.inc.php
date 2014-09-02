@@ -17,6 +17,7 @@ $urlRules = array(
     'bb/channel/<id:\w+>' => array('bidmanage/views/channel/restView', 'verb' => 'GET,HEAD'),
     'bb/clsrecommend/<id:\w+>' => array('bidmanage/views/clsrecommend/restView', 'verb' => 'GET,HEAD'),
     'bb/config/<id:\w+>' => array('bidmanage/views/config/restView', 'verb' => 'GET,HEAD'),
+    'bb/cps/<id:\w+>' => array('bidmanage/views/cps/restView', 'verb' => 'GET,HEAD'),
     
     array('bidmanage/views/user/restCreate', 'pattern' => 'bb/user/(update-)?<func:\w+>', 'verb' => 'GET,POST,HEAD'),
     array('bidmanage/views/bid/restCreate', 'pattern' => 'bb/bid/(update-)?<func:\w+>', 'verb' => 'GET,POST,HEAD'),
@@ -26,6 +27,7 @@ $urlRules = array(
     array('bidmanage/views/channel/restCreate', 'pattern' => 'bb/channel/(update-)?<func:\w+>', 'verb' => 'GET,POST,HEAD'),
     array('bidmanage/views/clsrecommend/restCreate', 'pattern' => 'bb/clsrecommend/(update-)?<func:\w+>', 'verb' => 'GET,POST,HEAD'),
     array('bidmanage/views/config/restCreate', 'pattern' => 'bb/config/(update-)?<func:\w+>', 'verb' => 'GET,POST,HEAD'),
+    array('bidmanage/views/cps/restCreate', 'pattern' => 'bb/cps/(update-)?<func:\w+>', 'verb' => 'GET,POST,HEAD'),
     
     'bb/public/user/<id:\w+>' => array('bidmanage/interface/user/restView', 'verb' => 'GET,HEAD'),
     /* 以下为常规 url rules */
