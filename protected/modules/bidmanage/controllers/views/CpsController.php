@@ -81,7 +81,7 @@ class CpsController extends restUIServer {
 		
 		try {
 			// 校验参数
-			if (isset($data['blocks']) && is_array($data['blocks'])) {
+			if (isset($data['startCityCode']) && is_array($data['startCityCode'])) {
 				// 查询财务账户报表
 				$data['accountId'] = $this->getAccountId();
 				$data['agencyId'] = $this->getAgencyId();
