@@ -261,7 +261,7 @@ class CpsDao extends DaoModule {
 						WHERE 
 							del_flag = 0 
 						AND 
-							product_id IN (".implode(chr(39), $param).")";
+							product_id IN (".implode(chr(44), $param).")";
 			$result = $this->executeSql($sqlRows, self::ALL);
 			
 		} catch (BBException $e) {

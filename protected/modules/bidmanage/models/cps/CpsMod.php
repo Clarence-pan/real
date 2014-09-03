@@ -367,7 +367,7 @@ class CpsMod {
 			$blockUpd = array_intersect($blockIds, $blockDbIds);
 				
 			// 生成删除区块的SQL
-			$sqlData[] = "update cps_product set del_flag = 1, uid = ".$param['agencyId']." where vendor_id = ".$param['agencyId']." and start_city_code = ".$param['startCityCode']." and block_id in (".implode(chr(39), $blockDel).")";
+			$sqlData[] = "update cps_product set del_flag = 1, uid = ".$param['agencyId']." where vendor_id = ".$param['agencyId']." and start_city_code = ".$param['startCityCode']." and block_id in (".implode(chr(44), $blockDel).")";
 			
 			// 生成新增区块和新增产品的SQL
 			$blockProductAdd = array();
@@ -447,7 +447,7 @@ class CpsMod {
 				// 需要删除的产品
 				$productDelId = array_diff($dbId, $frontId);
 				// 生成需要删除的产品
-				$sqlData[] = "update cps_product set del_flag = 1, uid = ".$param['agencyId']." where id in (".implode(chr(39), $productDelId).")";
+				$sqlData[] = "update cps_product set del_flag = 1, uid = ".$param['agencyId']." where id in (".implode(chr(44), $productDelId).")";
 			}
 			
 			// 向网站推送数据
@@ -489,7 +489,7 @@ class CpsMod {
 //				}
 //			}
 //			$groupParam['startCityCode'] = $param['startCityCode'];
-//			$groupParam['productIds'] = implode(chr(39), $productIds);
+//			$groupParam['productIds'] = implode(chr(44), $productIds);
 //			$groupProduct = $this->cpsDao->getGroupProduct($groupParam);
 //			
 //			// 过滤出需要查询的分组产品
