@@ -261,7 +261,7 @@ class CpsMod {
 				$blocksTemp['blockName'] = $tuniuBlockObj['blockName'];
 				$blocks[] = $blocksTemp;
 				$blocksTemp['products'] = array();
-				$blocksInfo[$blocksTemp['blockId']][] = $blocksTemp;
+				$blocksInfo[$blocksTemp['blockId']] = $blocksTemp;
 			}
 			
 			// 查询产品名称
@@ -475,6 +475,37 @@ class CpsMod {
 	 */
 	public function syncCpsBlockProduct($param) {
 		
+	}
+	
+	/**
+	 * 同步CPS订单
+	 */
+	public function syncCpsOrders() {
+		// 填充日志
+		if ($this->bbLog->isInfo()) {
+			$this->bbLog->logMethod("脚本执行无参数", "系统同步CPS订单", __METHOD__.Symbol::CONS_DOU_COLON.__LINE__, chr(50));
+		}
+
+		try {
+			
+			// 调用BOSS订单接口，获取订单信息
+			
+			
+			// 调用财务接口，获取采购单信息和结算方式
+			
+			
+			
+			
+			
+			$test = array();
+			
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+        	// 抛异常
+			throw new BBException($e->getCode(), $e->getMessage(), "系统同步CPS订单异常", $e);
+        }
 	}
 	
 //	// 存储主从线路映射关系
