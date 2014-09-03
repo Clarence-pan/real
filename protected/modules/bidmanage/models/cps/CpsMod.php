@@ -236,7 +236,6 @@ class CpsMod {
 		
 		// 初始化返回结果
 		$result = array();
-		$result['blocks'] = array();
 		$result['blocksInfo'] = array();
 
 		// 逻辑全部在异常块里执行，代码量不要超过200，超过200需要另抽方法
@@ -253,13 +252,11 @@ class CpsMod {
 			
 			// 整合区块维度
 			$tuniuBlock = array(array('blockId' => 1, 'blockName' => 'aaaa'),array('blockId' => 2, 'blockName' => 'bbb'));
-			$blocks = array();
 			$blocksInfo = array();
 			foreach($tuniuBlock as $tuniuBlockObj) {
 				$blocksTemp = array();
 				$blocksTemp['blockId'] = $tuniuBlockObj['blockId'];
 				$blocksTemp['blockName'] = $tuniuBlockObj['blockName'];
-				$blocks[] = $blocksTemp;
 				$blocksTemp['products'] = array();
 				$blocksInfo[$blocksTemp['blockId']] = $blocksTemp;
 			}
@@ -295,7 +292,6 @@ class CpsMod {
 			}
 			
 			// 整合最终结果
-			$result['blocks'] = $blocks;
 			$result['blocksInfo'] = $blocksInfoTrue;
 			
 			// 结束监控示例
@@ -494,6 +490,7 @@ class CpsMod {
 			// 调用财务接口，获取采购单信息和结算方式
 			
 			
+			// 批量插入数据，5000一插
 			
 			
 			
