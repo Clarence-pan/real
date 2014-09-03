@@ -266,14 +266,16 @@ class CpsMod {
 			
 			// 查询产品名称
 			$productsDb = $existsInfo['product'];
-			$productsDbIds = array();
-			foreach($productsDb as $productsDbObj) {
-				$productsDbIds[] = $productsDbObj['product_id'];
-			}
-			$proIdNames = $this->cpsDao->getExistsProductNameId($productsDbIds, chr(49));
 			$proIdNamesKv = array();
-			foreach($proIdNames as $proIdNamesObj) {
-				$proIdNamesKv[$proIdNamesObj['product_id']] = $proIdNamesObj['product_name'];
+			if (!empty($productsDb) && is_array($productsDb)) {
+				$productsDbIds = array();
+				foreach($productsDb as $productsDbObj) {
+					$productsDbIds[] = $productsDbObj['product_id'];
+				}
+				$proIdNames = $this->cpsDao->getExistsProductNameId($productsDbIds, chr(49));
+				foreach($proIdNames as $proIdNamesObj) {
+					$proIdNamesKv[$proIdNamesObj['product_id']] = $proIdNamesObj['product_name'];
+				}
 			}
 			
 			// 整合详细信息
@@ -351,10 +353,12 @@ class CpsMod {
 			// 分析区块修改状态
 			$blockDbIds = array();
 			$existsInfoBlock = $existsInfo['block'];
-			foreach ($existsInfoBlock as $existsInfoBlockObj) {
-				$blockDbIds[] = $existsInfoBlockObj['block_id'];
+			if (!empty($existsInfoBlock) && is_array($existsInfoBlock)) {
+				foreach ($existsInfoBlock as $existsInfoBlockObj) {
+					$blockDbIds[] = $existsInfoBlockObj['block_id'];
+				}
+				unset($existsInfoBlock);
 			}
-			unset($existsInfoBlock);
 			// 需要新增的区块
 			$blockAdd = array_diff($blockIds, $blockDbIds);
 			// 需要删除的区块
@@ -434,15 +438,17 @@ class CpsMod {
 			$dbId = array();
 			
 			$existsProduct = $existsInfo['product'];
-			foreach ($existsProduct as $existsProductObj) {
-				if (in_array($existsProductObj['block_id'], $blockUpd)) {
-					$dbId[] = $existsProductObj['id'];
+			if (!empty($existsProduct) && is_array($existsProduct)) {
+				foreach ($existsProduct as $existsProductObj) {
+					if (in_array($existsProductObj['block_id'], $blockUpd)) {
+						$dbId[] = $existsProductObj['id'];
+					}
 				}
+				// 需要删除的产品
+				$productDelId = array_diff($dbId, $frontId);
+				// 生成需要删除的产品
+				$sqlData[] = "update cps_product set del_flag = 1, uid = ".$param['agencyId']." where id in (".implode(chr(39), $productDelId).")";
 			}
-			// 需要删除的产品
-			$productDelId = array_diff($dbId, $frontId);
-			// 生成需要删除的产品
-			$sqlData[] = "update cps_product set del_flag = 1, uid = ".$param['agencyId']." where id in (".implode(chr(39), $productDelId).")";
 			
 			// 向网站推送数据
 			
