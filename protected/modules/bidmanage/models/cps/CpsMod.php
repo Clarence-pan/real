@@ -258,7 +258,7 @@ class CpsMod {
 			$blocksInfoTrue = array();
 			
 			// 查询现有区块
-			$param['webClasses'] = $webClassesOther;
+			$param['webClass'] = $webClassesOther;
 			$existsInfo = $this->cpsDao->getExistsBlockProduct($param);
 			
 			// 整合区块维度
