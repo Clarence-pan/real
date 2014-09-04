@@ -306,6 +306,7 @@ class CpsMod {
 				$now = date(Sundry::TIME_Y_M_D);
 				foreach($productsDb as $productsDbObj) {
 					$productsTemp = array();
+					$productsTemp['dbId'] = $productsDbObj['id'];
 					$productsTemp['productId'] = $productsDbObj['product_id'];
 					$productsTemp['productType'] = $productsDbObj['product_type'];
 					$productsTemp['productName'] = empty($rorRows[$productsDbObj['product_id']]) ? $proIdNamesKv[$productsDbObj['product_id']] : $rorRows[$productsDbObj['productName']];
