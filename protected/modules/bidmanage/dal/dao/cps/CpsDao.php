@@ -137,7 +137,7 @@ class CpsDao extends DaoModule {
 						and
 							del_flag = 0 
 						and
-							web_class = ".$param['webClasses']." 		 		
+							web_class = ".$param['webClass']." 		 		
 						and 
 							vendor_id = ".$param['agencyId'];
 			$result['block'] = $this->executeSql($sqlBlock, self::ALL);
@@ -161,7 +161,7 @@ class CpsDao extends DaoModule {
 							and
 								del_flag = 0 
 							and
-								web_class = ".$param['webClasses']." 			 
+								web_class = ".$param['webClass']." 			 
 							and 
 								vendor_id = ".$param['agencyId'];
 			$result['product'] = $this->executeSql($sqlProduct, self::ALL);

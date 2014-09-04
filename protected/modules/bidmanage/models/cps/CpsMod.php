@@ -391,7 +391,7 @@ class CpsMod {
 			$blockUpd = array_intersect($blockIds, $blockDbIds);
 				
 			// 生成删除区块的SQL
-			$sqlData[] = "update cps_product set del_flag = 1, uid = ".$param['agencyId']." where vendor_id = ".$param['agencyId']." and start_city_code = ".$param['startCityCode']." and block_id in (".implode(chr(44), $blockDel).")";
+			$sqlData[] = "update cps_product set del_flag = 1, uid = ".$param['agencyId']." where vendor_id = ".$param['agencyId']." and web_class = ".$param['webClass']." and start_city_code = ".$param['startCityCode']." and block_id in (".implode(chr(44), $blockDel).")";
 			
 			// 生成新增区块和新增产品的SQL
 			$blockProductAdd = array();
@@ -428,10 +428,10 @@ class CpsMod {
 				}
 			}
 			// 生成需要新增的产品和区块
-			$column = array('block_id', 'product_id', 'is_principal', 'product_type', 'vendor_id',  
+			$column = array('block_id', 'product_id', 'is_principal', 'web_class', 'product_type', 'vendor_id',  
 							'start_city_code', 'add_uid', 'add_time', 'update_uid');
 			$columnValue = array('blockId', 'productId', 'isPrincipal');
-			$defaultValue = array($param['productType'], $param['agencyId'], $param['startCityCode'], $param['agencyId'], date('Y-m-d H:i:s'), $param['agencyId']);
+			$defaultValue = array($param['webClass'], $param['productType'], $param['agencyId'], $param['startCityCode'], $param['agencyId'], date('Y-m-d H:i:s'), $param['agencyId']);
 			$sqlAdd = $this->_comdbMod->generateComInsert("cps_product", $column, $columnValue, $blockProductAdd, $defaultValue);
 			$sqlData = array_merge($sqlData, $sqlAdd);
 			unset($blockProductAdd);
