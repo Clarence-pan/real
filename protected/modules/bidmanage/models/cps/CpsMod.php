@@ -48,6 +48,7 @@ class CpsMod {
 		// 初始化返回结果
 		$result = array();
 		$result['rows'] = array();
+		$result['blocksInfo'] = array();
 		$result['count'] = 0;
 		$rows = array();
 
@@ -55,7 +56,6 @@ class CpsMod {
 		try {
 			// 添加监控示例
 			$posTry = BPMoniter::createMoniter(__METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
-			$flag = Symbol::BPM_EIGHT_HUNDRED;
 			
 			// 从memcache获取导航树
 			$memKey = md5('CpsMod::getCpsProduct' . $param['startCityCode']);
@@ -66,6 +66,7 @@ class CpsMod {
 				$tuniuParam['leftFlag'] = 1;
 				$tuniuParam['cityCode'] = $param['startCityCode'];
 				$clsrecomResult = TuniuIao::getTuniuLeftHeaderMenuInfo($tuniuParam);
+				unset($tuniuParam);
 				// 判断是否调用成功
 				if (!empty($clsrecomResult)) {
 					$webClassIds = array();
@@ -80,6 +81,7 @@ class CpsMod {
 								array_push($webClassIds, $childrenObj['id']);
 							}
 						}
+						unset($f_default_cat);
 						foreach($f_recommend_cat as $f_recommend_catObj) {
 							array_push($webClassIds, $f_recommend_catObj['id']);
 						}
@@ -87,26 +89,22 @@ class CpsMod {
 					$webClassIds = array_unique($webClassIds);
 					$clsrecomResult = $webClassIds;
 					// 缓存3h
-		         	Yii::app()->memcache->set($memKey, $webClassIds, 10800); 				
-				} else {
-					return array();
+		         	Yii::app()->memcache->set($memKey, $webClassIds, 10800); 	
+		         	unset($webClassIds);
+		         	unset($f_recommend_cat);			
 				}
 			}
 			
 			// 查询供应商拥有的分类
+			$cateIds = array();  
 			$webParam['agencyId'] = $param['agencyId'];
 			$webParam['startCityCode'] = $param['startCityCode'];
 			$webParam['classBrandTypes'] = array($param['productType']);
 			$webRows = $this->rorProductIao->queryWebCategoryList($webParam);
+			unset($webParam);
 			$cateValues = $webRows['filters'][0]['cateValues'];
-			// 如果供应商没有分类信息，则返回空结果
-			if (empty($cateValues) || !is_array($cateValues)) {
-				// 返回结果
-        		return $result; 
-			}
 			
 			// 初始化cateValues  ID集合
-	      	$cateIds = array();  
 	        foreach($cateValues as $key => $val){
 	        	array_push($cateIds, $val["id"]);  
 	        	foreach($val['children'] as $fkey => $fchildrenObj) {
@@ -116,63 +114,59 @@ class CpsMod {
 	        		}
 	        	}
 	        }
+	        unset($cateValues);
 	        
 	        // 获取和导航树的交集
 	        $cateIds = array_intersect($cateIds, $clsrecomResult);
 			
-			$webClassesOther = array();
-			if (!empty($param['webClassName'])) {
-				// 需要筛选分类
-				// 查询分类信息
-				$webClasses = $this->cpsDao->getWebClassByName($param);
-				// 如果没有分类信息，则返回空结果
-				if (empty($webClasses) || !is_array($webClasses)) {
-					// 返回结果
-	        		return $result; 
-				}
-				
-				// 整合并分割分类信息
-				foreach ($webClasses as $webClassesObj) {
-					array_push($webClassesOther, $webClassesObj['web_class']);
-				}
-				unset($webClassesObj);
-				
-				// 获取和本地分类的交集
-		        $webClassesOther = array_intersect($webClassesOther, $cateIds);
-			} else {
-				// 不需要筛选分类
-				$webClassesOther = $cateIds;
+			// 如果供应商没有分类信息，则返回空结果
+			if (empty($cateIds) || !is_array($cateIds)) {
+				// 结束监控
+				BPMoniter::endMoniter($posTry, Symbol::ONE_THOUSAND, __LINE__);
+				// 返回结果
+        		return $result; 
+			}
+			
+			// 需要筛选分类
+			// 查询分类信息
+			$webClasses = $this->cpsDao->getWebClassByName($param);
+			// 如果没有分类信息，则返回空结果
+			if (empty($webClasses) || empty($webClasses) || !in_array($webClasses['web_class'], $cateIds)) {
+				// 返回结果
+	        	return $result; 
+			}
+			unset($cateIds);
+			
+			// 获取需要查询的分类ID
+		    $webClassesOther = $webClasses['web_class'];
+			
+			// 调用网站区块，如果没有区块直接返回空
+			$tuniuBlock = array();
+			$tuniuBlock = array(array('blockId' => 1, 'blockName' => 'aaaa', 'webClass' => 426),array('blockId' => 2, 'blockName' => 'bbb', 'webClass' => 428));
+			if (empty($tuniuBlock) && !is_array($tuniuBlock)) {
+				// 结束监控
+				BPMoniter::endMoniter($posTry, Symbol::ONE_THOUSAND, __LINE__);
+				// 返回结果
+        		return $result; 
 			}
 			
 			// 循环调用搜索接口，捞出所有产品
 			$allProduct = array();
 			$mainProduct = array();
-			$allCount = intval(count($webClassesOther) / Symbol::TWO_HUNDRED) + 1;
 			$rorParam = array();
 			$rorParam['productType'] = $param['productType'];
 			$rorParam['vendorId'] = $param['agencyId'];
 			$rorParam['startCityCode'] = $param['startCityCode'];
-			
-			for ($i = 0; $i < $allCount; $i++) {
-				$rorParam['start'] = chr(48);
-				$rorParam['limit'] = chr(49);
-				$rorParam['categoryId'] = array_slice($webClassesOther, $i * Symbol::TWO_HUNDRED, Symbol::TWO_HUNDRED);
-				$temp = $this->rorProductIao->querySimilarProductList($rorParam);
-				$tempCount = $temp['data']['count'];
-				if (Symbol::ONE_THOUSAND < $tempCount) {
-					$subCount = intval($tempCount / Symbol::ONE_THOUSAND) + 1;
-					$rorParam['limit'] = Symbol::ONE_THOUSAND;
-					for ($j = 0; $j < $allCount; $j++) {
-						$rorParam['start'] = $j * Symbol::ONE_THOUSAND;
-						$temp = $this->rorProductIao->querySimilarProductList($rorParam);
-						$allProduct = array_merge($allProduct, $temp['data']['rows']);
-						$rorParam['showFlag'] = chr(48);
-						$temp = $this->rorProductIao->querySimilarProductList($rorParam);
-						$mainProduct = array_merge($mainProduct, $temp['data']['rows']);
-						unset($rorParam['showFlag']);
-					}
-				} else {
-					$rorParam['limit'] = $tempCount;
+			$rorParam['start'] = chr(48);
+			$rorParam['limit'] = chr(49);
+			$rorParam['webClassId'] = $webClassesOther;
+			$temp = $this->rorProductIao->querySimilarProductList($rorParam);
+			$tempCount = $temp['data']['count'];
+			if (Symbol::ONE_THOUSAND < $tempCount) {
+				$subCount = intval($tempCount / Symbol::ONE_THOUSAND) + 1;
+				$rorParam['limit'] = Symbol::ONE_THOUSAND;
+				for ($j = 0; $j < $subCount; $j++) {
+					$rorParam['start'] = $j * Symbol::ONE_THOUSAND;
 					$temp = $this->rorProductIao->querySimilarProductList($rorParam);
 					$allProduct = array_merge($allProduct, $temp['data']['rows']);
 					$rorParam['showFlag'] = chr(48);
@@ -180,9 +174,16 @@ class CpsMod {
 					$mainProduct = array_merge($mainProduct, $temp['data']['rows']);
 					unset($rorParam['showFlag']);
 				}
-				unset($temp);
-			}			
-			unset($webClassesOther);
+			} else {
+				$rorParam['limit'] = $tempCount;
+				$temp = $this->rorProductIao->querySimilarProductList($rorParam);
+				$allProduct = array_merge($allProduct, $temp['data']['rows']);
+				$rorParam['showFlag'] = chr(48);
+				$temp = $this->rorProductIao->querySimilarProductList($rorParam);
+				$mainProduct = array_merge($mainProduct, $temp['data']['rows']);
+			}
+			unset($temp);
+			unset($rorParam);		
 			
 			// 获取打包产品
 			$packProduct = $this->cpsDao->getPackProduct($param);
@@ -190,6 +191,7 @@ class CpsMod {
 			foreach($packProduct as $packProductObj) {
 				$packProducts[] = $packProductObj['product_id'];
 			}
+			unset($packProduct);
 			
 			// 整合数据
 			$singlePro = array();
@@ -197,21 +199,31 @@ class CpsMod {
 			foreach($mainProduct as $mainProductObj) {
 				$mainKeyPro[$mainProductObj['productId']] = chr(49);
 			}
+			unset($mainProduct);
+			// 获取区块信息
+			$blocksInfo = $this->getCpsBlock($param, $tuniuBlock, $webClassesOther, $allProduct);
+			$allProduct = $blocksInfo['rows'];
+			unset($blocksInfo['rows']);
 			foreach($allProduct as $allProductObj) {
 				if (!in_array($allProductObj['productId'], $packProducts) && !in_array($allProductObj['productId'], $singlePro)) {
 					$tempRows['isPrinciple'] = CommonTools::getIsOrNot($mainKeyPro[$allProductObj['productId']]);
 					$tempRows['productId'] = $allProductObj['productId'];
 					$tempRows['productType'] = $allProductObj['productType'];
 					$tempRows['productName'] = $allProductObj['productName'];
+					$tempRows['checkerFlag'] = $allProductObj['checkFlag'];
+					$tempRows['tuniuPrice'] = $allProductObj['tuniuPrice'];
 					$singlePro[] = $allProductObj['productId'];
 					$rows[] = $tempRows;
 				}
 			}
+			
+			// 整合最终结果
 			$result['rows'] = $rows;
 			$result['count'] = count($rows);
+			$result['blocksInfo'] = $blocksInfo['blocksInfo'];
 			
 			// 结束监控示例
-			BPMoniter::endMoniter($posTry, $flag, __LINE__);
+			BPMoniter::endMoniter($posTry, Symbol::TWO_THOUSAND, __LINE__);
 		} catch (BBException $e) {
 			BPMoniter::endMoniter($posTry, Symbol::BPM_ONE_MILLION, __LINE__);
             // 抛异常
@@ -228,7 +240,7 @@ class CpsMod {
 	/**
 	 * 获取CPS区块
 	 */
-	public function getCpsBlock($param) {
+	public function getCpsBlock($param, $tuniuBlock, $webClassesOther, $rows) {
 		// 填充日志
 		if ($this->bbLog->isInfo()) {
 			$this->bbLog->logMethod($param, $param['agencyId']."获取CPS区块", __METHOD__.Symbol::CONS_DOU_COLON.__LINE__, chr(50));
@@ -237,72 +249,87 @@ class CpsMod {
 		// 初始化返回结果
 		$result = array();
 		$result['blocksInfo'] = array();
+		$result['rows'] = array();
 
 		// 逻辑全部在异常块里执行，代码量不要超过200，超过200需要另抽方法
 		try {
-			// 添加监控示例
-			$posTry = BPMoniter::createMoniter(__METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
-			$flag = Symbol::BPM_EIGHT_HUNDRED;
-			
-			// 获取网站区块
-			
+			// 初始化相关返回结果
+			$rorRows = array();
+			$blocksInfoTrue = array();
 			
 			// 查询现有区块
+			$param['webClasses'] = $webClassesOther;
 			$existsInfo = $this->cpsDao->getExistsBlockProduct($param);
 			
 			// 整合区块维度
-			$tuniuBlock = array(array('blockId' => 1, 'blockName' => 'aaaa'),array('blockId' => 2, 'blockName' => 'bbb'));
 			$blocksInfo = array();
 			foreach($tuniuBlock as $tuniuBlockObj) {
 				$blocksTemp = array();
 				$blocksTemp['blockId'] = $tuniuBlockObj['blockId'];
 				$blocksTemp['blockName'] = $tuniuBlockObj['blockName'];
+				$blocksTemp['webClass'] = $tuniuBlockObj['webClass'];
 				$blocksTemp['products'] = array();
 				$blocksInfo[$blocksTemp['blockId']] = $blocksTemp;
 			}
 			
-			// 查询产品名称
+			// 整合已存在区块数据
 			$productsDb = $existsInfo['product'];
+			unset($existsInfo);
+			
 			$proIdNamesKv = array();
 			if (!empty($productsDb) && is_array($productsDb)) {
 				$productsDbIds = array();
 				foreach($productsDb as $productsDbObj) {
 					$productsDbIds[] = $productsDbObj['product_id'];
 				}
+				// 重整搜索数据
+				$rorRowProductIds = array();
+				foreach($rows as $rowsObj) {
+					// 提取已经存储在本地的产品
+					if (in_array($rowsObj['productId'], $productsDbIds)) {
+						$rowsObj['isInBlock'] = chr(49);
+					} else {
+						$rowsObj['isInBlock'] = chr(48);
+					}
+					$rorRows[$rowsObj['productId']] = $rowsObj;
+					$rorRowProductIds[] = $rowsObj['productId'];
+				}
+				// 获取已下线的产品ID
+				$productsDbIds = array_diff($productsDbIds, $rorRowProductIds);
+				// 查询产品名称
 				$proIdNames = $this->cpsDao->getExistsProductNameId($productsDbIds, chr(49));
 				foreach($proIdNames as $proIdNamesObj) {
 					$proIdNamesKv[$proIdNamesObj['product_id']] = $proIdNamesObj['product_name'];
 				}
-			}
-			
-			// 整合详细信息
-			$now = date(Sundry::TIME_Y_M_D);
-			foreach($productsDb as $productsDbObj) {
-				$productsTemp = array();
-				$productsTemp['productId'] = $productsDbObj['product_id'];
-				$productsTemp['productType'] = $productsDbObj['product_type'];
-				$productsTemp['productName'] = $proIdNamesKv[$productsDbObj['product_id']];
-				$productsTemp['isPrinciple'] = $productsDbObj['is_principle'];
- 				$productsTemp['delEnable'] = ($now == $productsDbObj['add_time'] ?　chr(48) : chr(49));
-				$blocksInfo[$productsDbObj['block_id']]['products'][] = $productsTemp; 
-			}
-			$blocksInfoTrue = array();
-			foreach ($blocksInfo as $key => $val) {
-				$blocksInfoTrue[] = $val;
+				
+				// 整合详细信息
+				$now = date(Sundry::TIME_Y_M_D);
+				foreach($productsDb as $productsDbObj) {
+					$productsTemp = array();
+					$productsTemp['productId'] = $productsDbObj['product_id'];
+					$productsTemp['productType'] = $productsDbObj['product_type'];
+					$productsTemp['productName'] = empty($rorRows[$productsDbObj['product_id']]) ? $proIdNamesKv[$productsDbObj['product_id']] : $rorRows[$productsDbObj['productName']];
+					$productsTemp['checkerFlag'] = empty($rorRows[$productsDbObj['product_id']]) ? chr(49) : chr(50);
+					$productsTemp['tuniuPrice'] = empty($rorRows[$productsDbObj['product_id']]) ? $productsDbObj['tuniu_price'] : $rorRows[$productsDbObj['product_id']]['tuniuPrice'];
+					$productsTemp['isPrinciple'] = $productsDbObj['is_principle'];
+	 				$productsTemp['delEnable'] = ($now == $productsDbObj['add_time'] ?　chr(48) : chr(49));
+					$blocksInfo[$productsDbObj['block_id']]['products'][] = $productsTemp; 
+				}
+				foreach ($blocksInfo as $key => $val) {
+					$blocksInfoTrue[] = $val;
+				}
 			}
 			
 			// 整合最终结果
 			$result['blocksInfo'] = $blocksInfoTrue;
+			$result['rows'] = $rorRows;
 			
-			// 结束监控示例
-			BPMoniter::endMoniter($posTry, $flag, __LINE__);
 		} catch (BBException $e) {
-			BPMoniter::endMoniter($posTry, Symbol::BPM_ONE_MILLION, __LINE__);
             // 抛异常
             throw $e;
         } catch (Exception $e) {
         	// 抛异常
-			throw new BBException($e->getCode(), $e->getMessage(), BPMoniter::getMoniter($posTry).Symbol::CONS_DOU_COLON."获取供应商消耗信息异常", $e);
+			throw new BBException($e->getCode(), $e->getMessage(), "获取供应商区块信息异常", $e);
         }
         
         // 返回结果

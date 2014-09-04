@@ -63,6 +63,9 @@
  	// 1000
  	const ONE_THOUSAND = 1000;
  	
+ 	// 2000
+ 	const TWO_THOUSAND = 2000;
+ 	
  	// 20000
  	const BPM_TWENTY_THOUSAND = 20000;		
  	

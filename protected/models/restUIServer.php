@@ -78,6 +78,10 @@ class restUIServer extends restfulServer {
         $this->setAgencyId($agencyId);
         // 初始化管理员账号数组
         $adArr = explode('@', $loginName);
+        // 初始化基本参数
+        $data['accountId'] = $this->getAccountId();
+        $data['agencyId'] = $this->getAgencyId();
+        $data['loginName'] = $this->getLoginName();
         // 判断是否是管理员
         if (0 == strcmp($loginName, $agencyId) || 0 == strcmp('admin', $adArr[0])) {
         	// 为管理员

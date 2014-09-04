@@ -13,26 +13,23 @@ class CpsDao extends DaoModule {
 
 		try {
 			
-			// 初始化动态SQL
-			$dySql = "";
-			if (!empty($param['webClassName'])) {
-				$dySql = " AND ad_name LIKE '%".$param['webClassName']."%'";
-			}
-			
 			// 查询信息
 			$sqlRows = "SELECT 	
 							web_class	 
 						FROM 
 							position_sync_class 
 						WHERE 
-							start_city_code = ".$param['startCityCode']." 
+							start_city_code = ".$param['startCityCode']."
+						AND 
+							class_depth = ".$param['webClassDepth']." 
 						AND 
 							parent_depth IN (0,1) 
 						AND 
-							del_flag = 0 ".
-						$dySql;
+							del_flag = 0 
+						AND 
+							ad_name = '".$param['webClassName']."'";
 					
-			$result = $this->executeSql($sqlRows, self::ALLO);
+			$result = $this->executeSql($sqlRows, self::ROWO);
 			
 		} catch (BBException $e) {
             // 抛异常
@@ -136,11 +133,13 @@ class CpsDao extends DaoModule {
 						FROM 
 							cps_product
 						WHERE
-							 start_city_code = ".$param['startCityCode']."
+							start_city_code = ".$param['startCityCode']."
 						and
-							 del_flag = 0 
+							del_flag = 0 
+						and
+							web_class = ".$param['webClasses']." 		 		
 						and 
-							 vendor_id = ".$param['agencyId'];
+							vendor_id = ".$param['agencyId'];
 			$result['block'] = $this->executeSql($sqlBlock, self::ALL);
 			
 			// 查询产品信息
@@ -150,8 +149,10 @@ class CpsDao extends DaoModule {
 								product_id, 
 								product_type, 
 								start_city_code,
+								web_class,
 								cps_flag, 
 								is_principal, 
+								tuniu_price,
 								DATE_FORMAT(add_time, '%Y-%m-%d') as add_time 
 							FROM 
 								cps_product
@@ -159,6 +160,8 @@ class CpsDao extends DaoModule {
 								start_city_code = ".$param['startCityCode']."
 							and
 								del_flag = 0 
+							and
+								web_class = ".$param['webClasses']." 			 
 							and 
 								vendor_id = ".$param['agencyId'];
 			$result['product'] = $this->executeSql($sqlProduct, self::ALL);
@@ -190,6 +193,7 @@ class CpsDao extends DaoModule {
 						product_type, 
 						start_city_code, 
 						is_principal, 
+						tuniu_price,
 						add_uid, 
 						add_time, 
 						update_uid
@@ -201,6 +205,7 @@ class CpsDao extends DaoModule {
 							product_type, 
 							start_city_code, 
 							is_principal, 
+							tuniu_price,
 							4333,
 							NOW(),
 							4333
