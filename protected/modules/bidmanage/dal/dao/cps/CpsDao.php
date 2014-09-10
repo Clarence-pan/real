@@ -281,6 +281,101 @@ class CpsDao extends DaoModule {
 		return $result;
 	}
 	
-	
-	
+	/**
+     * 查询推广报表
+     * 输入: $params['vendorId'] -- 供应商ID，可选 (bb_account)
+     *                vendorName -- 供应商名称，可选 (bb_account)
+     *                purchaseType    -- 结算方式 (cps_purchase_order)
+     *                purchaseState   -- 结算状态 (cps_purchase_order)
+     *                placeOrderTime  -- 下单时间 (cps_order)
+     *                show_start_time~show_end_time -- 推广时间
+     * 输出：vendorId -- 供应商ID，bb_account
+     *       accountName -- 供应商名称，bb_account
+     *       purchaseType -- 结算方式,cps_purchase_order
+     *       purchaseTime -- 结算时间，cps_purchase_order
+     *       orderId      -- 订单编号，cps_order
+     *       placeOrderTime -- 下单时间，cps_order
+     *       signContractTime -- 签约时间，cps_order
+     *       returnTime  -- 出游归来时间，cps_order
+     *       productId  --  线路编号 / 产品编号，cps_order
+     *       purchaseOrderId -- 采购单号, cps_purchase_order
+     *       purchaseCost -- 采购成本, cps_purchase_order
+     *       expenseRatio -- 推广费用比例, cps_purchase_order (不用使用默认cps_expense_ratio_config.expense_ratio)
+     *                       格式: 百分比，如"3%"
+     *       expense -- 推广费用, cps_purchase_order
+     *       purchaseState -- 结算状态 0 未结算 1 已结算, cps_purchase_order (默认未结算)
+     *       invoiceState -- 发票/是否开具发票 0 未开具 1 已开具, cps_purchase_order (默认未开)
+     *       problem --  疑问 = "未提出"
+	*/
+    public function getShowReport($param)
+    {
+        // 初始化返回结果
+        $result = array();
+
+        try {
+            // 初始化动态SQL
+            $sql = 'SELECT a.vendor_id AS vendorId, a.account_name AS accountName , p.purchase_type AS purchaseType, p.purchase_time AS purchaseTime,
+                            o.order_id AS orderId, o.place_order_time AS placeOrderTime, o.sign_contract_time AS signContractTime, o.return_time AS returnTime,
+                            o.product_id AS productId, p.purchase_order_id AS purchaseOrderId, p.purchase_cost AS purchaseCost, p.expense_ratio AS expenseRatio,
+                            p.expense, p.purchase_state AS purchaseState, p.invoice_state AS invoiceState
+                    FROM
+                        bb_account AS a
+                        INNER JOIN cps_order AS o ON a.vendor_id = o.vendor_id
+                        INNER JOIN cps_purchase_order AS p ON o.order_id = p.order_id
+                    WHERE 0 = 0 ';
+            $sqlParam = array();
+            if (isset($param['vendorId'])) {
+                $sql .= ' AND a.vendor_id = :vendorId ';
+                $sqlParam[':vendorId'] = $param['vendorId'];
+            }
+            if (isset($param['accountName'])) {
+                $sql .= ' AND a.account_name = :accountName ';
+                $sqlParam[':accountName'] = $param['accountName'];
+            }
+            if (isset($param['purchaseType'])) {
+                $sql .= ' AND p.purchase_type = :purchaseType ';
+                $sqlParam[':purchaseType'] = $param['purchaseType'];
+            }
+            if (isset($param['purchaseState'])) {
+                $sql .= ' AND p.purchase_state = :purchaseState ';
+                $sqlParam[':purchaseState'] = $param['purchaseState'];
+            }
+            if (isset($param['placeOrderTimeBegin'])) {
+                $sql .= ' AND o.place_order_time >= :placeOrderTimeBegin ';
+                $sqlParam[':placeOrderTimeBegin'] = $param['placeOrderTimeBegin'];
+            }
+            if (isset($param['placeOrderTimeEnd'])) {
+                $sql .= ' AND o.place_order_time <= :placeOrderTimeEnd ';
+                $sqlParam[':placeOrderTimeEnd'] = $param['placeOrderTimeEnd'];
+            }
+            if (isset($param['showStartTime']) && isset($param['showEndTime'])) {
+                // TODO: show_start_time, show_end_time是哪个表里面的？
+                $sql .= ' AND p.show_start_time >= :showStartTime AND p.show_end_time <= :showEndTime ';
+                $sqlParam[':showStartTime'] = $param['showStartTime'];
+                $sqlParam[':showEndTime'] = $param['showEndTime'];
+            }
+            // 如果一次性取的数据太多，会死掉的，因此做下校验
+            if (!isset($param['limit']) or intval($param['limit']) > 100){
+                throw new Exception("Incorrect limit: '" . $param['limit'] . "'");
+            }
+            if (isset($param['limit'])) {
+                // 这里使用:limit这种参数方式会出问题，还是直接拼接，使用intval更安全t
+                $sql .= " LIMIT " . intval($param['limit']);
+                if (isset($param['start'])) {
+                    $sql .= " OFFSET " . intval($param['start']);
+                }
+            }
+
+            $sqlRows = $this->dbRO->createCommand($sql)->queryAll(true, $sqlParam);
+
+            $result = $sqlRows;
+
+        } catch (BBException $e) {
+            throw $e;
+        } catch (Exception $e) {
+            throw new BBException(ErrorCode::ERR_231550, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231550)], "向数据库查询推广报表异常: " . $e->getMessage(), $e);
+        }
+
+        return $result;
+    }
 }

@@ -575,7 +575,31 @@ class CpsMod {
 //					unset($rorParam['showFlag']);
 //				}
 //			}
-	
-    
+
+    /**
+     * 查询推广报表
+     * */
+    public function getShowReport($param) {
+        // 填充日志
+        if ($this->bbLog->isInfo()) {
+            $this->bbLog->logMethod($param, $param['loginName'] . '(ID:'. $param['agencyId'] . ")查询推广报表", __METHOD__.Symbol::CONS_DOU_COLON.__LINE__, chr(50));
+        }
+
+        try {
+            $result =$this->cpsDao->getShowReport($param);
+            foreach ($result as &$row) {
+                $row['problem'] = '未提出';
+                $row['expenseRatio'] = strval($row['expenseRatio'] * 100) . '%';
+                $row['purchaseType'] = DictionaryTools::getPurchaseType($row['purchaseType']);
+            }
+            return $result;
+        } catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+            // 抛异常
+            throw new BBException($e->getCode(), $e->getMessage(), "系统同步CPS订单异常", $e);
+        }
+    }
 }
 ?>

@@ -289,5 +289,14 @@ class BusinessType{
     
     // 未知状态
     const NO_NAME = '未知状态';
+
+    const PURCHASE_TYPE_OTHER = '其他';
+    const PURCHASE_TYPE_WEEK = '周结';
+    const PURCHASE_TYPE_MONTH_AT_16 = "月结16日";
+    const PURCHASE_TYPE_MONTH_AT_1 = "月结1日";
+    const PURCHASE_TYPE_DAY = "日结";
+    const PURCHASE_TYPE_HALF_MONTH = "半月结";
+    const PURCHASE_TYPE_HALF_MONTH_AT_16 = "半月结16日";
+
 }
 ?>
