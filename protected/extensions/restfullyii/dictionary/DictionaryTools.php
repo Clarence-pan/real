@@ -215,20 +215,27 @@ class DictionaryTools {
      * @return mixed   结算类型的字符串
      */
     public static function getPurchaseType($params) {
-        $purchaseTypeMap = array(
-            chr(48) => BusinessType::PURCHASE_TYPE_OTHER, // 0
-            chr(49) => BusinessType::PURCHASE_TYPE_WEEK, // 1
-            chr(50) => BusinessType::PURCHASE_TYPE_MONTH_AT_16, // 2
-            chr(51) => BusinessType::PURCHASE_TYPE_MONTH_AT_1, // 3
-            chr(52) => BusinessType::PURCHASE_TYPE_DAY, // 4
-            chr(53) => BusinessType::PURCHASE_TYPE_HALF_MONTH, // 5
-//          chr(54) => BusinessType::PURCHASE_TYPE_HALF_MONTH_AT_16, // 6
-            chr(55) => BusinessType::PURCHASE_TYPE_OTHER, // 7
-            chr(56) => BusinessType::PURCHASE_TYPE_OTHER); // 8
-        if (isset($purchaseTypeMap[intval($params)])) {
-            return $purchaseTypeMap[intval($params)];
-        } else {
-            return PURCHASE_TYPE_OTHER;
+        switch (intval($params)) {
+            case chr(48):
+                return BusinessType::PURCHASE_TYPE_OTHER; // 0
+            case chr(49):
+                return BusinessType::PURCHASE_TYPE_WEEK; // 1
+            case chr(50):
+                return BusinessType::PURCHASE_TYPE_MONTH_AT_16; // 2
+            case chr(51):
+                return BusinessType::PURCHASE_TYPE_MONTH_AT_1; // 3
+            case chr(52):
+                return BusinessType::PURCHASE_TYPE_DAY; // 4
+            case chr(53):
+                return BusinessType::PURCHASE_TYPE_HALF_MONTH; // 5
+//          case chr(54):
+//              return BusinessType::PURCHASE_TYPE_HALF_MONTH_AT_16; // 6
+            case chr(55):
+                return BusinessType::PURCHASE_TYPE_OTHER; // 7
+            case chr(56):
+                return BusinessType::PURCHASE_TYPE_OTHER; // 8
+            default:
+                return BusinessType::PURCHASE_TYPE_OTHER;
         }
     }
 }
