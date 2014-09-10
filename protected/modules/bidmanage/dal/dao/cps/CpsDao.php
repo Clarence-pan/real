@@ -288,7 +288,7 @@ class CpsDao extends DaoModule {
      *                purchaseType    -- 结算方式 (cps_purchase_order)
      *                purchaseState   -- 结算状态 (cps_purchase_order)
      *                placeOrderTime  -- 下单时间 (cps_order)
-     *                show_start_time~show_end_time -- 推广时间
+     *                showStartTime~showEndTime -- 推广时间(cps_product)
      * 输出：vendorId -- 供应商ID，bb_account
      *       accountName -- 供应商名称，bb_account
      *       purchaseType -- 结算方式,cps_purchase_order
@@ -314,46 +314,65 @@ class CpsDao extends DaoModule {
 
         try {
             // 初始化动态SQL
-            $sql = 'SELECT a.vendor_id AS vendorId, a.account_name AS accountName , p.purchase_type AS purchaseType, p.purchase_time AS purchaseTime,
-                            o.order_id AS orderId, o.place_order_time AS placeOrderTime, o.sign_contract_time AS signContractTime, o.return_time AS returnTime,
-                            o.product_id AS productId, p.purchase_order_id AS purchaseOrderId, p.purchase_cost AS purchaseCost, p.expense_ratio AS expenseRatio,
-                            p.expense, p.purchase_state AS purchaseState, p.invoice_state AS invoiceState
-                    FROM
-                        bb_account AS a
-                        INNER JOIN cps_order AS o ON a.vendor_id = o.vendor_id
-                        INNER JOIN cps_purchase_order AS p ON o.order_id = p.order_id
-                    WHERE 0 = 0 ';
+            $sqlSelect = 'SELECT
+                a.vendor_id AS vendorId,
+                a.account_name AS accountName,
+                p.purchase_type AS purchaseType,
+                p.purchase_time AS purchaseTime,
+                o.order_id AS orderId,
+                o.place_order_time AS placeOrderTime,
+                o.sign_contract_time AS signContractTime,
+                o.return_time AS returnTime,
+                o.product_id AS productId,
+                p.purchase_order_id AS purchaseOrderId,
+                p.purchase_cost AS purchaseCost,
+                p.expense_ratio AS expenseRatio,
+                p.expense,
+                p.purchase_state AS purchaseState,
+                p.invoice_state AS invoiceState ';
+            $sqlFrom = '
+                FROM bb_account AS a
+                    INNER JOIN cps_order AS o ON a.vendor_id = o.vendor_id
+                    INNER JOIN cps_purchase_order AS p ON o.order_id = p.order_id ';
+            $sqlWhere = '
+                WHERE 0 = 0 ';
             $sqlParam = array();
             if (isset($param['vendorId'])) {
-                $sql .= ' AND a.vendor_id = :vendorId ';
+                $sqlWhere .= ' AND a.vendor_id = :vendorId ';
                 $sqlParam[':vendorId'] = $param['vendorId'];
             }
             if (isset($param['accountName'])) {
-                $sql .= ' AND a.account_name = :accountName ';
+                $sqlWhere .= ' AND a.account_name = :accountName ';
                 $sqlParam[':accountName'] = $param['accountName'];
             }
             if (isset($param['purchaseType'])) {
-                $sql .= ' AND p.purchase_type = :purchaseType ';
+                $sqlWhere .= ' AND p.purchase_type = :purchaseType ';
                 $sqlParam[':purchaseType'] = $param['purchaseType'];
             }
             if (isset($param['purchaseState'])) {
-                $sql .= ' AND p.purchase_state = :purchaseState ';
+                $sqlWhere .= ' AND p.purchase_state = :purchaseState ';
                 $sqlParam[':purchaseState'] = $param['purchaseState'];
             }
             if (isset($param['placeOrderTimeBegin'])) {
-                $sql .= ' AND o.place_order_time >= :placeOrderTimeBegin ';
+                $sqlWhere .= ' AND o.place_order_time >= :placeOrderTimeBegin ';
                 $sqlParam[':placeOrderTimeBegin'] = $param['placeOrderTimeBegin'];
             }
             if (isset($param['placeOrderTimeEnd'])) {
-                $sql .= ' AND o.place_order_time <= :placeOrderTimeEnd ';
+                $sqlWhere .= ' AND o.place_order_time <= :placeOrderTimeEnd ';
                 $sqlParam[':placeOrderTimeEnd'] = $param['placeOrderTimeEnd'];
             }
             if (isset($param['showStartTime']) && isset($param['showEndTime'])) {
-                // TODO: show_start_time, show_end_time是哪个表里面的？
-                $sql .= ' AND p.show_start_time >= :showStartTime AND p.show_end_time <= :showEndTime ';
+                $sqlFrom .= ' INNER JOIN cps_product AS pdt ON o.product_id = pdt.product_id ';
+                $sqlWhere .= ' AND pdt.show_start_time >= :showStartTime AND pdt.show_end_time <= :showEndTime ';
                 $sqlParam[':showStartTime'] = $param['showStartTime'];
                 $sqlParam[':showEndTime'] = $param['showEndTime'];
             }
+
+            $sql = $sqlSelect . $sqlFrom . $sqlWhere;
+            unset($sqlSelect);
+            unset($sqlFrom);
+            unset($sqlWhere);
+
             // 如果一次性取的数据太多，会死掉的，因此做下校验
             if (!isset($param['limit']) or intval($param['limit']) > 100){
                 throw new Exception("Incorrect limit: '" . $param['limit'] . "'");
@@ -367,7 +386,6 @@ class CpsDao extends DaoModule {
             }
 
             $sqlRows = $this->dbRO->createCommand($sql)->queryAll(true, $sqlParam);
-
             $result = $sqlRows;
 
         } catch (BBException $e) {
