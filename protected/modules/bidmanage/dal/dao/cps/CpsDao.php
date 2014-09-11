@@ -316,7 +316,7 @@ class CpsDao extends DaoModule {
             // 初始化动态SQL
             $sqlSelect = 'SELECT
                 a.vendor_id AS vendorId,
-                a.account_name AS accountName,
+                a.account_name AS vendorName,
                 p.purchase_type AS purchaseType,
                 p.purchase_time AS purchaseTime,
                 o.order_id AS orderId,
@@ -341,9 +341,9 @@ class CpsDao extends DaoModule {
                 $sqlWhere .= ' AND a.vendor_id = :vendorId ';
                 $sqlParam[':vendorId'] = $param['vendorId'];
             }
-            if (isset($param['accountName'])) {
-                $sqlWhere .= ' AND a.account_name = :accountName ';
-                $sqlParam[':accountName'] = $param['accountName'];
+            if (isset($param['vendorName'])) {
+                $sqlWhere .= ' AND a.account_name = :vendorName ';
+                $sqlParam[':vendorName'] = $param['vendorName'];
             }
             if (isset($param['purchaseType'])) {
                 $sqlWhere .= ' AND p.purchase_type = :purchaseType ';
@@ -361,11 +361,16 @@ class CpsDao extends DaoModule {
                 $sqlWhere .= ' AND o.place_order_time <= :placeOrderTimeEnd ';
                 $sqlParam[':placeOrderTimeEnd'] = $param['placeOrderTimeEnd'];
             }
-            if (isset($param['showStartTime']) && isset($param['showEndTime'])) {
+            if (isset($param['showStartTime']) or isset($param['showEndTime'])) {
                 $sqlFrom .= ' INNER JOIN cps_product AS pdt ON o.product_id = pdt.product_id ';
-                $sqlWhere .= ' AND pdt.show_start_time >= :showStartTime AND pdt.show_end_time <= :showEndTime ';
-                $sqlParam[':showStartTime'] = $param['showStartTime'];
-                $sqlParam[':showEndTime'] = $param['showEndTime'];
+                if (isset($param['showStartTime'])) {
+                    $sqlWhere .= ' AND pdt.show_start_time >= :showStartTime ';
+                    $sqlParam[':showStartTime'] = $param['showStartTime'];
+                }
+                if (isset($param['showEndTime'])) {
+                    $sqlWhere .= ' AND pdt.show_end_time <= :showEndTime ';
+                    $sqlParam[':showEndTime'] = $param['showEndTime'];
+                }
             }
 
             $sql = $sqlSelect . $sqlFrom . $sqlWhere;

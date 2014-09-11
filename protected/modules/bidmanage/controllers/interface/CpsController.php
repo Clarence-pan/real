@@ -84,7 +84,7 @@ class CpsController extends restSysServer {
      *                placeOrderTime  -- 下单时间 ，可选
      *                show_start_time~show_end_time -- 推广时间，可选
      * 输出：vendorId -- 供应商ID
-     *       accountName -- 供应商名称
+     *       vendorName -- 供应商名称
      *       purchaseType -- 结算方式
      *       purchaseTime -- 结算时间
      *       orderId      -- 订单编号
