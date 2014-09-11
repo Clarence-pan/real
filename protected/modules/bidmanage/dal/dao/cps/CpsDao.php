@@ -374,14 +374,11 @@ class CpsDao extends DaoModule {
             }
 
             $sql = $sqlSelect . $sqlFrom . $sqlWhere;
+            $sqlCount = ' SELECT COUNT(*) AS count ' . $sqlFrom . $sqlWhere;
             unset($sqlSelect);
             unset($sqlFrom);
             unset($sqlWhere);
 
-            // 如果一次性取的数据太多，会死掉的，因此做下校验
-            if (empty($param['limit']) or intval($param['limit']) > 100){
-                throw new Exception("Incorrect limit: '" . $param['limit'] . "'");
-            }
             if (!empty($param['limit'])) {
                 // 这里使用:limit这种参数方式会出问题，还是直接拼接，使用intval更安全t
                 $sql .= " LIMIT " . intval($param['limit']);
@@ -391,7 +388,8 @@ class CpsDao extends DaoModule {
             }
 
             $sqlRows = $this->dbRO->createCommand($sql)->queryAll(true, $sqlParam);
-            $result = $sqlRows;
+            $count = $this->dbRO->createCommand($sqlCount)->queryScalar($sqlParam);
+            $result = array("count" => $count, "rows" => $sqlRows);
 
         } catch (BBException $e) {
             throw $e;
