@@ -337,37 +337,37 @@ class CpsDao extends DaoModule {
             $sqlWhere = '
                 WHERE 0 = 0 ';
             $sqlParam = array();
-            if (isset($param['vendorId'])) {
+            if (!empty($param['vendorId'])) {
                 $sqlWhere .= ' AND a.vendor_id = :vendorId ';
                 $sqlParam[':vendorId'] = $param['vendorId'];
             }
-            if (isset($param['vendorName'])) {
+            if (!empty($param['vendorName'])) {
                 $sqlWhere .= ' AND a.account_name = :vendorName ';
                 $sqlParam[':vendorName'] = $param['vendorName'];
             }
-            if (isset($param['purchaseType'])) {
+            if (!empty($param['purchaseType'])) {
                 $sqlWhere .= ' AND p.purchase_type = :purchaseType ';
                 $sqlParam[':purchaseType'] = $param['purchaseType'];
             }
-            if (isset($param['purchaseState'])) {
+            if (!empty($param['purchaseState'])) {
                 $sqlWhere .= ' AND p.purchase_state = :purchaseState ';
                 $sqlParam[':purchaseState'] = $param['purchaseState'];
             }
-            if (isset($param['placeOrderTimeBegin'])) {
+            if (!empty($param['placeOrderTimeBegin'])) {
                 $sqlWhere .= ' AND o.place_order_time >= :placeOrderTimeBegin ';
                 $sqlParam[':placeOrderTimeBegin'] = $param['placeOrderTimeBegin'];
             }
-            if (isset($param['placeOrderTimeEnd'])) {
+            if (!empty($param['placeOrderTimeEnd'])) {
                 $sqlWhere .= ' AND o.place_order_time <= :placeOrderTimeEnd ';
                 $sqlParam[':placeOrderTimeEnd'] = $param['placeOrderTimeEnd'];
             }
-            if (isset($param['showStartTime']) or isset($param['showEndTime'])) {
+            if (!empty($param['showStartTime']) or !empty($param['showEndTime'])) {
                 $sqlFrom .= ' INNER JOIN cps_product AS pdt ON o.product_id = pdt.product_id ';
-                if (isset($param['showStartTime'])) {
+                if (!empty($param['showStartTime'])) {
                     $sqlWhere .= ' AND pdt.show_start_time >= :showStartTime ';
                     $sqlParam[':showStartTime'] = $param['showStartTime'];
                 }
-                if (isset($param['showEndTime'])) {
+                if (!empty($param['showEndTime'])) {
                     $sqlWhere .= ' AND pdt.show_end_time <= :showEndTime ';
                     $sqlParam[':showEndTime'] = $param['showEndTime'];
                 }
@@ -379,13 +379,13 @@ class CpsDao extends DaoModule {
             unset($sqlWhere);
 
             // 如果一次性取的数据太多，会死掉的，因此做下校验
-            if (!isset($param['limit']) or intval($param['limit']) > 100){
+            if (empty($param['limit']) or intval($param['limit']) > 100){
                 throw new Exception("Incorrect limit: '" . $param['limit'] . "'");
             }
-            if (isset($param['limit'])) {
+            if (!empty($param['limit'])) {
                 // 这里使用:limit这种参数方式会出问题，还是直接拼接，使用intval更安全t
                 $sql .= " LIMIT " . intval($param['limit']);
-                if (isset($param['start'])) {
+                if (!empty($param['start'])) {
                     $sql .= " OFFSET " . intval($param['start']);
                 }
             }
