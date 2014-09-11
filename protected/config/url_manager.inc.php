@@ -19,6 +19,7 @@ $urlRules = array(
     'hg/channel/<id:\w+>' => array('manage/views/channel/restView', 'verb' => 'GET,HEAD'),
     'hg/clsrecommend/<id:\w+>' => array('manage/views/clsrecommend/restView', 'verb' => 'GET,HEAD'),
     'hg/config/<id:\w+>' => array('manage/views/config/restView', 'verb' => 'GET,HEAD'),
+    'hg/cps/<id:\w+>' => array('manage/views/cps/restView', 'verb' => 'GET,HEAD'),
 
     array('manage/views/user/restCreate', 'pattern' => 'hg/user/update/<func:\w+>', 'verb' => 'POST'),
     array('manage/views/refund/restCreate', 'pattern' => 'hg/refund/update/<func:\w+>', 'verb' => 'POST'),
@@ -29,6 +30,7 @@ $urlRules = array(
     array('manage/views/channel/restCreate', 'pattern' => 'hg/channel/update/<func:\w+>', 'verb' => 'POST'),
     array('manage/views/clsrecommend/restCreate', 'pattern' => 'hg/clsrecommend/update/<func:\w+>', 'verb' => 'POST'),
     array('manage/views/config/restCreate', 'pattern' => 'hg/config/update/<func:\w+>', 'verb' => 'POST'),
+    array('manage/views/cps/restCreate', 'pattern' => 'hg/cps/update/<func:\w+>', 'verb' => 'POST'),
     
     'hg/public/user/<id:\w+>' => array('manage/interface/user/restView', 'verb' => 'GET,HEAD'),
     'hg/public/refund/<id:\w+>' => array('manage/interface/refund/restView', 'verb' => 'GET,HEAD'),

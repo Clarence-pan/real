@@ -1213,4 +1213,38 @@ class BuckbeekIao {
 
     }
     
+    /**
+     * 获取费率
+     */
+    public static function getExpenseRatio($params) {
+        $client = new RESTClient();
+        $url = Yii::app()->params['BB_HOST'].'bb/public/cps/Expenseratio';
+        try {
+            $response = $client->get($url, $params);
+        }catch(Exception $e) {
+            Yii::log($e, 'warning');
+            return array(array(), false, 230115, '接口调用失败！');
+        }
+        return $response;
+    }
+    
+    /**
+     * 配置费率
+     */
+    public static function configExpenseRatio($params) {
+        $client = new RESTClient();
+        $url = Yii::app()->params['BB_HOST'].'bb/public/cps/create-Configexpenseratio';
+        try {
+            $response = $client->post($url, $params);
+        }catch(Exception $e) {
+            Yii::log($e, 'warning');
+            return array(array(), false, 230115, '接口调用失败！');
+        }
+        return $response;
+
+    }    
+
+    
+    
+    
 }
