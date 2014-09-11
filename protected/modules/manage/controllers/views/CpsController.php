@@ -58,6 +58,13 @@ class CpsController extends restfulServer{
 			$this->returnRest(array(), false, 210000, '参数不正确！');
 		}
     }
-    
+
+    public function doRestGetCpsShowReport($url, $data) {
+        $result = $this->cpsMod->getCpsShowReport($data);
+        if ($result['success']) {
+            $this->returnRest($result['data']);
+        } else {
+            $this->returnRest($result['msg'], true, 230015, $result['msg']);
+        }
+    }
 }
-?>

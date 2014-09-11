@@ -1244,6 +1244,20 @@ class BuckbeekIao {
 
     }    
 
+    /**
+     * 查询CPS推广报表
+     */
+    public static function getCpsShowReport($params) {
+        $client = new RESTClient();
+        $url = Yii::app()->params['BB_HOST'] . 'bb/public/cps/cpsshowreport';
+        try {
+            $response = $client->get($url, $params);
+        } catch(Exception $e) {
+            Yii::log($e, "warnning");
+            return array(array(), false, 230115, '接口调用失败！');
+        }
+        return $response;
+    }
     
     
     

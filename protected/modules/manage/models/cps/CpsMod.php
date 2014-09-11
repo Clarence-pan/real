@@ -30,6 +30,8 @@ class CpsMod {
     	// 返回结果
         return BuckbeekIao::configExpenseRatio($params);
     }
-    
+    public function getCpsShowReport($param){
+        return BuckbeekIao::getCpsShowReport($param);
+    }
  }
 ?>
