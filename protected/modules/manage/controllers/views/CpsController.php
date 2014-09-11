@@ -64,7 +64,7 @@ class CpsController extends restfulServer{
      */
     public function doRestGetCpsShowReport($url, $data) {
         // 校验参数
-        if (!empty($data['expenseRatio']) && !empty($data['uid']) && !empty($data['nickname'])) {
+        if (!empty($data['uid']) && !empty($data['nickname'])) {
             $result = $this->cpsMod->getShowReport($data);
             if ($result['success']) {
                 $this->returnRest($result['data']);
