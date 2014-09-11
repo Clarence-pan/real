@@ -337,37 +337,37 @@ class CpsDao extends DaoModule {
             $sqlWhere = '
                 WHERE 0 = 0 ';
             $sqlParam = array();
-            if (!empty($param['vendorId'])) {
+            if ($this->isValidParam($param['vendorId'])) {
                 $sqlWhere .= ' AND a.vendor_id = :vendorId ';
                 $sqlParam[':vendorId'] = $param['vendorId'];
             }
-            if (!empty($param['vendorName'])) {
-                $sqlWhere .= ' AND a.account_name = :vendorName ';
-                $sqlParam[':vendorName'] = $param['vendorName'];
+            if ($this->isValidParam($param['vendorName'])) {
+                $sqlWhere .= ' AND a.account_name LIKE :vendorName ';
+                $sqlParam[':vendorName'] = '%' . $param['vendorName'] . '%';
             }
-            if (!empty($param['purchaseType'])) {
+            if ($this->isValidParam($param['purchaseType'])) {
                 $sqlWhere .= ' AND p.purchase_type = :purchaseType ';
                 $sqlParam[':purchaseType'] = $param['purchaseType'];
             }
-            if (!empty($param['purchaseState'])) {
+            if ($this->isValidParam($param['purchaseState'])) {
                 $sqlWhere .= ' AND p.purchase_state = :purchaseState ';
                 $sqlParam[':purchaseState'] = $param['purchaseState'];
             }
-            if (!empty($param['placeOrderTimeBegin'])) {
+            if ($this->isValidParam($param['placeOrderTimeBegin'])) {
                 $sqlWhere .= ' AND o.place_order_time >= :placeOrderTimeBegin ';
                 $sqlParam[':placeOrderTimeBegin'] = $param['placeOrderTimeBegin'];
             }
-            if (!empty($param['placeOrderTimeEnd'])) {
+            if ($this->isValidParam($param['placeOrderTimeEnd'])) {
                 $sqlWhere .= ' AND o.place_order_time <= :placeOrderTimeEnd ';
                 $sqlParam[':placeOrderTimeEnd'] = $param['placeOrderTimeEnd'];
             }
-            if (!empty($param['showStartTime']) or !empty($param['showEndTime'])) {
+            if ($this->isValidParam($param['showStartTime']) or $this->isValidParam($param['showEndTime'])) {
                 $sqlFrom .= ' INNER JOIN cps_product AS pdt ON o.product_id = pdt.product_id ';
-                if (!empty($param['showStartTime'])) {
+                if ($this->isValidParam($param['showStartTime'])) {
                     $sqlWhere .= ' AND pdt.show_start_time >= :showStartTime ';
                     $sqlParam[':showStartTime'] = $param['showStartTime'];
                 }
-                if (!empty($param['showEndTime'])) {
+                if ($this->isValidParam($param['showEndTime'])) {
                     $sqlWhere .= ' AND pdt.show_end_time <= :showEndTime ';
                     $sqlParam[':showEndTime'] = $param['showEndTime'];
                 }
@@ -379,10 +379,10 @@ class CpsDao extends DaoModule {
             unset($sqlFrom);
             unset($sqlWhere);
 
-            if (!empty($param['limit'])) {
+            if ($this->isValidParam($param['limit'])) {
                 // 这里使用:limit这种参数方式会出问题，还是直接拼接，使用intval更安全t
                 $sql .= " LIMIT " . intval($param['limit']);
-                if (!empty($param['start'])) {
+                if ($this->isValidParam($param['start'])) {
                     $sql .= " OFFSET " . intval($param['start']);
                 }
             }
@@ -398,5 +398,12 @@ class CpsDao extends DaoModule {
         }
 
         return $result;
+    }
+
+    /**
+     * 判断是否是有效的参数，只有空字符串（""）和null值是无效的，其他值包括0都是有效的
+     */
+    private function isValidParam($param) {
+        return !is_null($param) and $param !== "";
     }
 }
