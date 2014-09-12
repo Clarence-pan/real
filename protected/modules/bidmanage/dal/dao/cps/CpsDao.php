@@ -694,13 +694,13 @@ class CpsDao extends DaoModule {
 			// 查询CPS供应商SQL
 			$sqlRow = "SELECT ". 	
 						"DATE_FORMAT(show_end_date, '%Y-%m-%d') as showEndDate ".
-					  "FROM " .
+					  " FROM " .
 					  	"cps_vendor " .
-					  "WHERE " .
+					  " WHERE " .
 					  	"vendor_id = " .$param['agencyId'].
-					  "AND " .
+					  " AND " .
 					  	"del_flag = 0 " .
-					  "AND " .
+					  " AND " .
 					  	"cps_flag = 1 ";
 			// 查询CPS供应商
 			$this->dbRW->createCommand($sqlRow)->queryRow();
