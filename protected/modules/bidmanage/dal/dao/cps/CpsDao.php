@@ -807,11 +807,14 @@ class CpsDao extends DaoModule {
             p.expense_ratio AS expenseRatio,
             p.expense,
             p.purchase_state AS purchaseState,
-            p.invoice_state AS invoiceState ';
+            p.invoice_state AS invoiceState,
+            pdt.show_start_time AS showStartTime,
+            pdt.show_end_time AS showEndTime';
         $sqlFrom = '
             FROM bb_account AS a
                 INNER JOIN cps_order AS o ON a.vendor_id = o.vendor_id
-                INNER JOIN cps_purchase_order AS p ON o.order_id = p.order_id ';
+                INNER JOIN cps_purchase_order AS p ON o.order_id = p.order_id
+                INNER JOIN cps_product AS pdt ON o.cps_id = pdt.id';
         $sqlWhere = '
             WHERE 0 = 0 ';
         $sqlParam = array();
@@ -839,16 +842,14 @@ class CpsDao extends DaoModule {
             $sqlWhere .= ' AND o.place_order_time <= :placeOrderTimeEnd ';
             $sqlParam[':placeOrderTimeEnd'] = $param['placeOrderTimeEnd'];
         }
-        if (CommonTools::isValidParam($param['showStartTime']) or CommonTools::isValidParam($param['showEndTime'])) {
-            $sqlFrom .= ' INNER JOIN cps_product AS pdt ON o.product_id = pdt.product_id ';
-            if (CommonTools::isValidParam($param['showStartTime'])) {
-                $sqlWhere .= ' AND pdt.show_start_time >= :showStartTime ';
-                $sqlParam[':showStartTime'] = $param['showStartTime'];
-            }
-            if (CommonTools::isValidParam($param['showEndTime'])) {
-                $sqlWhere .= ' AND pdt.show_end_time <= :showEndTime ';
-                $sqlParam[':showEndTime'] = $param['showEndTime'];
-            }
+
+        if (CommonTools::isValidParam($param['showStartTime'])) {
+            $sqlWhere .= ' AND pdt.show_start_time >= :showStartTime ';
+            $sqlParam[':showStartTime'] = $param['showStartTime'];
+        }
+        if (CommonTools::isValidParam($param['showEndTime'])) {
+            $sqlWhere .= ' AND pdt.show_end_time <= :showEndTime ';
+            $sqlParam[':showEndTime'] = $param['showEndTime'];
         }
 
         $sql = $sqlSelect . $sqlFrom . $sqlWhere;
@@ -856,6 +857,8 @@ class CpsDao extends DaoModule {
         unset($sqlSelect);
         unset($sqlFrom);
         unset($sqlWhere);
+
+        //echo CommonTools::fillSqlParams($sql, $sqlParam); // for debug
 
         if (CommonTools::isValidParam($param['limit'])) {
             // 这里使用:limit这种参数方式会出问题，还是直接拼接，使用intval更安全t
