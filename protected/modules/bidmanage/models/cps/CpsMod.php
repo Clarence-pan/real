@@ -1263,6 +1263,9 @@ class CpsMod {
                 $row['problem'] = '未提出';
                 $row['expenseRatio'] = strval($row['expenseRatio'] * 100) . chr(37); // 添加%
                 $row['purchaseType'] = DictionaryTools::getPurchaseType($row['purchaseType']);
+                if ($row['showEndTime'] == "0000-00-00 00:00:00") {
+                    $row['showEndTime'] = "未结束";
+                }
             }
             return $result;
         } catch (BBException $e) {
