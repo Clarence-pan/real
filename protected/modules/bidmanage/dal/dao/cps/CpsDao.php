@@ -129,13 +129,17 @@ class CpsDao extends DaoModule {
 			
 			// 查询区块信息
 			$sqlBlock = "SELECT 	 
-							DISTINCT block_id	 
+							DISTINCT block_name	 
 						FROM 
 							cps_product
 						WHERE
 							start_city_code = ".$param['startCityCode']."
 						and
 							del_flag = 0 
+						and
+							cps_flag = 1
+						and
+							product_type = ".$param['productType']."			
 						and
 							web_class = ".$param['webClass']." 		 		
 						and 
@@ -145,21 +149,26 @@ class CpsDao extends DaoModule {
 			// 查询产品信息
 			$sqlProduct = "SELECT 
 						 		id,
-								block_id, 
+								block_id,
+								block_name, 
 								product_id, 
 								product_type, 
 								start_city_code,
 								web_class,
-								cps_flag, 
-								is_principal, 
 								tuniu_price,
+								cps_flag, 
+								is_principal,
 								DATE_FORMAT(add_time, '%Y-%m-%d') as add_time 
 							FROM 
 								cps_product
 							WHERE
 								start_city_code = ".$param['startCityCode']."
 							and
-								del_flag = 0 
+								del_flag = 0
+							and
+								cps_flag = 1 		
+							and
+								product_type = ".$param['productType']."				 
 							and
 								web_class = ".$param['webClass']." 			 
 							and 
@@ -185,38 +194,48 @@ class CpsDao extends DaoModule {
 		try {
 			
 			// 初始化插入默认区块SQL
-			$sqlIns = "INSERT INTO cps_product 
-						(
-						vendor_id, 
-						block_id, 
-						product_id, 
-						product_type, 
-						start_city_code, 
-						is_principal, 
-						tuniu_price,
-						add_uid, 
-						add_time, 
-						update_uid
-						)
-						SELECT 
-							vendor_id, 
-							".$param['blockAdd'].",
-							product_id, 
-							product_type, 
-							start_city_code, 
-							is_principal, 
-							tuniu_price,
-							4333,
-							NOW(),
-							4333
-						FROM 
-						    cps_product
-						WHERE 
-						    del_flag = 0
-						AND 
-							start_city_code = ".$param['startCityCode']."
-						AND
-						   	block_id IN (".$param['blockIds'].")";
+			$sqlIns = "INSERT INTO cps_product ".
+						"(vendor_id, ".
+						"block_name, ".
+						"product_id, ".
+						"product_type, ".
+						"start_city_code,".
+						"web_class,". 
+						"is_principal, ".
+						"cps_flag,".
+						"principal_product,".
+						"show_start_time,".
+						"show_end_time,".
+						"add_uid, ".
+						"add_time, ".
+						"update_uid)".
+						"SELECT ".
+							"vendor_id,". 
+							"'".$param['defaultBlockName']."',".
+							"product_id, ".
+							"product_type, ".
+							"start_city_code,".
+							"web_class,".  
+							"is_principal, ".
+							"cps_flag,".
+							"principal_product,".
+							"show_start_time,".
+							"show_end_time,".
+							"4333,".
+							"'".date(Sundry::TIME_Y_M_D)."',".
+							"4333".
+						"FROM ".
+						    "cps_product".
+						"WHERE ".
+						    "del_flag = 0".
+						"AND ".
+							"start_city_code = ".$param['startCityCode'].
+						"AND ".
+							"web_class = ".$param['webClass'].
+						"AND ".
+							"product_type = ".$param['productType'].						
+						"AND ".
+						   	"block_name = '".$param['delBlockName']."'";
 						   	
 			// 初始化更新SQL
 	   		$sqlUpd = "UPDATE
@@ -227,8 +246,12 @@ class CpsDao extends DaoModule {
 						    del_flag = 0
 						AND 
 							start_city_code = ".$param['startCityCode']."
+						AND 
+							web_class = ".$param['webClass']."
+						AND 
+							product_type = ".$param['productType']."						
 						AND
-						   	block_id IN (".$param['blockIds'].")";
+						   	block_name = '".$param['delBlockName']."'";
 						   	
 			// 操作数据库
 			$sqlData = array();
@@ -260,9 +283,11 @@ class CpsDao extends DaoModule {
 			
 			// 查询区块信息
 			$sqlRows = "SELECT 	
-							DISTINCT product_id
+							id,
+							product_id".
+							$dySql."
 						FROM 
-							bid_product 
+							cps_product_name 
 						WHERE 
 							del_flag = 0 
 						AND 
@@ -279,6 +304,425 @@ class CpsDao extends DaoModule {
         
         // 返回结果
 		return $result;
+	}
+	
+	/**
+	 * 查询所有费率
+	 */
+	public function queryExpenseRatioAll() {
+		// 初始化返回结果
+		$result = array();
+		try {
+			
+			// 查询费率
+			$sqlRows = "SELECT ".
+						  "expense_ratio, ".
+						  "date_format(add_time, '%Y-%m-%d') AS add_time ".
+					  "FROM ". 	
+						  "cps_expense_ratio_config ".
+					  "WHERE ".	
+						  "del_flag = 0 ".
+				      "ORDER BY ".	
+						  "id ASC ";
+			$result = $this->dbRW->createCommand($sqlRows)->queryAll();
+			
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+            // 抛异常
+			throw new BBException(ErrorCode::ERR_231550, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231550)], $sqlRows."向数据库查询所有费率异常", $e);
+        }
+        
+        // 返回结果
+		return $result;
+	}
+	
+	/**
+	 * 查询费率
+	 */
+	public function queryExpenseRatio() {
+		// 初始化返回结果
+		$result = array();
+		try {
+			
+			// 查询费率
+			$sqlRow = "SELECT ".
+						  "expense_ratio as expenseRatio ".
+					  "FROM ". 	
+						  "cps_expense_ratio_config ".
+					  "WHERE ".	
+						  "del_flag = 0 ".
+				      "ORDER BY ".	
+						  "id DESC ".
+					  "LIMIT ".	
+						  "1 ";
+			$result = $this->dbRW->createCommand($sqlRow)->queryRow();
+			
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+            // 抛异常
+			throw new BBException(ErrorCode::ERR_231550, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231550)], $sqlRow."向数据库查询费率异常", $e);
+        }
+        
+        // 返回结果
+		return $result;
+	}
+	
+	/**
+	 * 配置费率
+	 */
+	public function configExpenseRatio($param) {
+		try {
+			
+			// 配置费率
+			$sqlIns = "INSERT ". 	
+						"cps_expense_ratio_config( ".
+							"expense_ratio, ".
+							"add_uid, ".
+							"add_time, ".
+							"update_uid) ".
+						" VALUES( " .
+							$param['expenseRatio'].",".
+							$param['uid'].",".
+							"'".date(Sundry::TIME_Y_M_D_H_I_S)."',".
+							$param['uid'].")";
+			$this->dbRW->createCommand($sqlIns)->execute();
+			
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+            // 抛异常
+			throw new BBException(ErrorCode::ERR_231600, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231600)], $sqlIns."向数据库配置费率异常", $e);
+        }
+	}
+	
+	/**
+	 * 查询还在推广的主线产品
+	 */
+	public function queryCpsShowPrincipalProducts($param) {
+		// 初始化返回结果
+		$result = array();
+		try {
+			
+			// 配置费率
+			$sqlRows = "SELECT ". 	
+							"distinct principal_product ".
+						" FROM " .
+							" cps_product ".
+						" WHERE ". 
+							" del_flag = 0 ".
+						" AND ".
+							" cps_flag = 1 ";
+			$result = $this->executeSql($sqlRows, self::ALL);
+			
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+            // 抛异常
+			throw new BBException(ErrorCode::ERR_231550, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231550)], $sqlRows."向数据库查询还在推广的产品异常", $e);
+        }
+        
+        // 返回结果
+		return $result;
+	}
+	
+	/**
+	 * 查询还在推广的所有主从产品
+	 */
+	public function queryCpsShowAllProducts($param) {
+		// 初始化返回结果
+		$result = array();
+		try {
+			
+			// 配置费率
+			$sqlRows = "SELECT ". 	
+							" product_id ".
+						" FROM " .
+							" cps_product_group ".
+						" WHERE ". 
+							" del_flag = 0 ".
+						" AND ".
+							" principal_product in (".implode(chr(44), $param).") ";
+			$result = $this->executeSql($sqlRows, self::ALL);
+			
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+            // 抛异常
+			throw new BBException(ErrorCode::ERR_231550, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231550)], $sqlRows."向数据库查询还在推广的所有主从产品异常", $e);
+        }
+        
+        // 返回结果
+		return $result;
+	}
+	
+	/**
+	 * 查询还在推广产品的推广开始期
+	 */
+	public function queryCpsProductShowTime($param, $flag) {
+		// 初始化返回结果
+		$result = array();
+		try {
+			// 初始化动态SQL
+			$dySql = "";
+			if (chr(49) == $flag) {
+				$dySql = " AND ".
+							" product_id in (".implode(chr(44), $param).") ";
+			} else {
+				$dySql = " AND ".
+							" principal_product in (".implode(chr(44), $param).") ";
+			}
+			
+			// 配置费率
+			$sqlRows = "SELECT ".
+							" id, ". 
+							" vendor_id, ". 	
+							" product_id, ".
+							" principal_product, ".
+							" DATE_FORMAT(show_start_time, '%Y-%m-%d %H:%i:%s') as show_start_time, ".
+							" DATE_FORMAT(show_end_time, '%Y-%m-%d %H:%i:%s') as show_end_time ".
+						" FROM " .
+							" cps_product ".
+						" WHERE ". 
+							" del_flag = 0 ".
+						" AND ".
+							" cps_flag = 1 ".
+						$dySql;
+						
+							
+			$result = $this->dbRW->createCommand($sqlRows)->queryAll();
+			
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+            // 抛异常
+			throw new BBException(ErrorCode::ERR_231550, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231550)], $sqlRows."向数据库查询还在推广的产品异常", $e);
+        }
+        
+        // 返回结果
+		return $result;
+	}
+	
+	/**
+	 * 查询当日推广中的主线或从产品
+	 */
+	public function queryCpsProductPriOrNot($param) {
+		// 初始化返回结果
+		$result = array();
+		try {
+			
+			// 查询当日推广中的主线或从产品
+			$sqlRows = "SELECT ". 	
+							" product_id ".
+						" FROM " .
+							" cps_product ".
+						" WHERE ". 
+							" del_flag = 0 ".
+						" AND ".
+							" cps_flag = 1".
+						" AND ".
+							" is_principal = ".$param.
+						" AND ".
+							" date_format(show_start_time, '%Y-%m-%d') = '".date(Sundry::TIME_Y_M_D, time() - 12*60*60)."' ";
+			$result = $this->dbRW->createCommand($sqlRows)->queryAll();
+			
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+            // 抛异常
+			throw new BBException(ErrorCode::ERR_231550, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231550)], $sqlRows."向数据库查询当日推广中的主线或从产品异常", $e);
+        }
+        
+        // 返回结果
+		return $result;
+	}
+	
+	/**
+	 * 查询已经归档的产品组
+	 */
+	public function queryExistsProductGroup($param) {
+		// 初始化返回结果
+		$result = array();
+		try {
+			
+			// 根据产品ID查询产品名称
+			$sqlRows = "SELECT ".
+							" distinct product_id, ". 	
+							" principal_product ".
+						" FROM " .
+							" cps_product_group ".
+						" WHERE ". 
+							" del_flag = 0 ".
+						" AND ".
+							" product_id IN (".implode(chr(44), $param).")";
+							
+			$result = $this->dbRW->createCommand($sqlRows)->queryAll();
+			
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+            // 抛异常
+			throw new BBException(ErrorCode::ERR_231550, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231550)], $sqlRows."向数据库 查询已经归档的产品组异常", $e);
+        }
+        
+        // 返回结果
+		return $result;
+	}
+	
+	/**
+	 * 查询网站显示的产品
+	 */
+	public function queryShowCpsProduct($params) {
+		// 初始化返回结果
+		$result = array();
+		try {
+			
+			// 根据产品ID查询产品名称
+			$sqlRows = "SELECT ".
+							" product_id as productId, ". 	
+							" product_type as productType ".
+						" FROM " .
+							" cps_product ".
+						" WHERE ". 
+							" del_flag = 0 ".
+						" AND ".
+							" web_class = ".$params['webClass'].
+						" AND ".
+							" start_city_code = ".$params['startCityCode'].
+						" AND ".
+							" product_type = ".$params['productType'].
+						" AND ".
+							" block_name = '".$params['blockName']."'";	
+			$result = $this->dbRO->createCommand($sqlRows)->queryAll();
+			
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+            // 抛异常
+			throw new BBException(ErrorCode::ERR_231550, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231550)], $sqlRows."向数据库查询网站显示的产品异常", $e);
+        }
+        
+        // 返回结果
+		return $result;
+	}
+	
+	/**
+	 * 添加CPS供应商
+	 */
+	public function addCpsVendor($param) {
+		try {
+			// 添加CPS供应商SQL
+			$sqlIns = "INSERT ". 	
+						"cps_vendor( ".
+							"vendor_id, ".
+							"cps_flag, ".
+							"show_start_date, ".
+							"show_end_date, ".
+							"add_uid, ".
+							"add_time, ".
+							"update_uid) ".
+						" VALUES( " .
+							$param['agencyId'].",".
+							$param['cpsFlag'].",".
+							"'".date(Sundry::TIME_Y_M_D)."',".
+							"'".$param['showEndDate']."',".
+							$param['agencyId'].",".
+							"'".date(Sundry::TIME_Y_M_D_H_I_S)."',".
+							$param['agencyId'].")";
+			// 添加CPS供应商
+			$this->dbRW->createCommand($sqlIns)->execute();
+			
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+            // 抛异常
+			throw new BBException(ErrorCode::ERR_231600, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231600)], $sqlIns."向数据库添加CPS供应商异常", $e);
+        }
+	}
+	
+	/**
+	 * 查询CPS供应商
+	 */
+	public function queryCpsVendor($param) {
+		try {
+			// 查询CPS供应商SQL
+			$sqlRow = "SELECT ". 	
+						"DATE_FORMAT(show_end_date, '%Y-%m-%d') as showEndDate ".
+					  "FROM " .
+					  	"cps_vendor " .
+					  "WHERE " .
+					  	"vendor_id = " .$param['agencyId'].
+					  "AND " .
+					  	"del_flag = 0 " .
+					  "AND " .
+					  	"cps_flag = 1 ";
+			// 查询CPS供应商
+			$this->dbRW->createCommand($sqlRow)->queryRow();
+			
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+            // 抛异常
+			throw new BBException(ErrorCode::ERR_231600, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231600)], $sqlRow."向数据库查询CPS供应商异常", $e);
+        }
+	}
+	
+	/**
+	 * 过期CPS
+	 */
+	public function overdueCps($now) {
+		$transaction = $this->dbRW->beginTransaction();
+		try {
+			
+			$sqlOvdVendor = Symbol::EMPTY_STRING;
+			$sqlOvdProduct = Symbol::EMPTY_STRING;
+			
+			// 查询需要过期的供应商
+			$sqlVendor = "SELECT vendor_id FROM cps_vendor WHERE cps_flag = 1 AND del_flag = 0 AND show_end_date = '".$now."'";
+			$vendors = $this->dbRW->createCommand($sqlVendor)->queryAll();
+			
+			// 如果没有供应商需要过期，则结束事务；否则，过期相应供应商
+			if (!empty($vendors) && is_array($vendors)) {
+				// 整合供应商ID
+				$vendorIds = Symbol::EMPTY_STRING;
+				foreach ($vendors as $vendorsObj) {
+					$vendorIds .= $vendorsObj['vendor_id'].chr(44);
+				}
+				$vendorIds = substr($vendorIds, 0, strlen($vendorIds) - 1);
+				
+				// 过期供应商
+				$sqlOvdVendor = "UPDATE cps_vendor SET cps_flag = 2 WHERE cps_flag = 1 AND del_flag = 0 AND show_end_date = '".$now."'";
+				$this->dbRW->createCommand($sqlOvdVendor)->execute();
+				
+				// 过期产品
+				$sqlOvdProduct = "UPDATE cps_product SET cps_flag = 2, show_end_time = '".date(Sundry::TIME_Y_M_D_H_I_S)."' WHERE cps_flag = 1 AND del_flag = 0 AND vendor_id IN (".$vendorIds.")";
+				$this->dbRW->createCommand($sqlOvdVendor)->execute();	
+			}
+			// 提交事务
+			$transaction->commit();
+		} catch (BBException $e) {
+			// 回滚数据
+			$transaction->rollback();
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+        	// 回滚数据
+        	$transaction->rollback();
+            // 抛异常
+			throw new BBException(ErrorCode::ERR_231616, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231616)], $sqlVendor.Symbol::CONS_DOU_COLON.$sqlOvdVendor.Symbol::CONS_DOU_COLON.$sqlOvdProduct.Symbol::CONS_DOU_COLON."向数据库过期CPS异常", $e);
+        }
 	}
 	
 	/**
@@ -406,4 +850,5 @@ class CpsDao extends DaoModule {
     private function isValidParam($param) {
         return !is_null($param) and $param !== "";
     }
+	
 }
