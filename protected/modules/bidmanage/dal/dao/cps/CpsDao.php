@@ -386,7 +386,7 @@ class CpsDao extends DaoModule {
 			
 			// 查询费率
 			$sqlRow = "SELECT ".
-						  "expense_ratio as expenseRatio ".
+						  "expense_ratio * 100 as expenseRatio ".
 					  "FROM ". 	
 						  "cps_expense_ratio_config ".
 					  "WHERE ".	
