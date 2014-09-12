@@ -305,56 +305,6 @@ class CpsController extends restSysServer {
 
     }
 
-    private function mapShowReportKey($key){
-        switch ($key) {
-            case "vendorId"; return '供应商ID';
-            case 'vendorName': return '供应商名称';
-            case 'purchaseType': return '结算方式';
-            case 'purchaseTime': return '结算时间';
-            case 'orderId': return '订单编号';
-            case 'placeOrderTime': return '下单时间';
-            case 'signContractTime': return '签约时间';
-            case 'returnTime': return '出游归来时间';
-            case 'productId': return '线路编号';
-            case 'purchaseOrderId': return '采购单号';
-            case 'purchaseCost': return '采购成本';
-            case 'expenseRatio': return '推广费用比例';
-            case 'expense': return '推广费用';
-            case 'purchaseState': return '结算状态';
-            case 'invoiceState': return '发票是否开具';
-            case 'problem': return '疑问';
-            default:    return $key;
-        }
-    }
-    private function mapShowReportKeys(&$keys){
-        foreach ($keys as &$key){
-            $key = $this->mapShowReportKey($key);
-        }
-        return $keys;
-    }
-
-    private function mapShowReportValues(&$valuesRows){
-        foreach ($valuesRows as &$row) {
-            $row['purchaseState'] = ($row['purchaseState'] ? "已结算" : "未结算");
-            $row['invoiceState'] = ($row['invoiceState'] ? "已开" : "未开");
-        }
-        return $valuesRows;
-    }
-
-    private function mapUtf8ToGbk(&$values) {
-        if (is_array($values)){
-            foreach ($values as &$value) {
-                $value = $this->mapUtf8ToGbk($value);
-            }
-        } else if (is_string($values)){
-            $values = iconv('utf-8', 'gbk', $values);
-        } else {
-            $values = strval($values);
-            $values = iconv('utf-8', 'gbk', $values);
-        }
-        return $values;
-    }
-
     /**导出推广管理报表为excel
      * @param $url   -- 无用
      * @param $data  -- 参数
@@ -373,7 +323,7 @@ class CpsController extends restSysServer {
         // 输出Excel列头信息
         $head = array('供应商ID', '供应商名称', '结算方式', '结算时间', '订单编号', '下单时间', '签约时间', '出游归来时间', '线路编号', '采购单号', '采购成本', '推广费用比例', '推广费用', '结算状态', '发票是否开具', '疑问');
         // CSV的Excel支持GBK编码，一定要转换，否则乱码
-        $head = $this->mapUtf8ToGbk($head);
+        $head = CommonTools::mapUtf8ToGbk($head);
         // 写入列头
         fputcsv($fp, $head);
         unset($head);
@@ -387,9 +337,9 @@ class CpsController extends restSysServer {
                 break;
             }
 
-            $result = $this->mapShowReportValues($result);
+            $result = CommonTools::mapCpsShowReportValues($result);
             $result = $result['rows'];
-            $this->mapUtf8ToGbk($result);
+            CommonTools::mapUtf8ToGbk($result);
             foreach ($result as &$row) {
                 fputcsv($fp, $row);
             }

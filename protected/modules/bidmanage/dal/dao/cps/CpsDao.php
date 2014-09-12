@@ -753,102 +753,100 @@ class CpsDao extends DaoModule {
 	*/
     public function getShowReport($param)
     {
-        // 初始化返回结果
-        $result = array();
+        // 添加监控
+        $monitorPos = BPMoniter::createMoniter(__METHOD__ . Symbol::CONS_DOU_COLON . __LINE__);
+
+        // 初始化动态SQL
+        $sqlSelect = 'SELECT
+            a.vendor_id AS vendorId,
+            a.account_name AS vendorName,
+            p.purchase_type AS purchaseType,
+            p.purchase_time AS purchaseTime,
+            o.order_id AS orderId,
+            o.place_order_time AS placeOrderTime,
+            o.sign_contract_time AS signContractTime,
+            o.return_time AS returnTime,
+            o.product_id AS productId,
+            p.purchase_order_id AS purchaseOrderId,
+            p.purchase_cost AS purchaseCost,
+            p.expense_ratio AS expenseRatio,
+            p.expense,
+            p.purchase_state AS purchaseState,
+            p.invoice_state AS invoiceState ';
+        $sqlFrom = '
+            FROM bb_account AS a
+                INNER JOIN cps_order AS o ON a.vendor_id = o.vendor_id
+                INNER JOIN cps_purchase_order AS p ON o.order_id = p.order_id ';
+        $sqlWhere = '
+            WHERE 0 = 0 ';
+        $sqlParam = array();
+        if (CommonTools::isValidParam($param['vendorId'])) {
+            $sqlWhere .= ' AND a.vendor_id = :vendorId ';
+            $sqlParam[':vendorId'] = $param['vendorId'];
+        }
+        if (CommonTools::isValidParam($param['vendorName'])) {
+            $sqlWhere .= ' AND a.account_name LIKE :vendorName ';
+            $sqlParam[':vendorName'] = '%' . $param['vendorName'] . '%';
+        }
+        if (CommonTools::isValidParam($param['purchaseType'])) {
+            $sqlWhere .= ' AND p.purchase_type = :purchaseType ';
+            $sqlParam[':purchaseType'] = $param['purchaseType'];
+        }
+        if (CommonTools::isValidParam($param['purchaseState'])) {
+            $sqlWhere .= ' AND p.purchase_state = :purchaseState ';
+            $sqlParam[':purchaseState'] = $param['purchaseState'];
+        }
+        if (CommonTools::isValidParam($param['placeOrderTimeBegin'])) {
+            $sqlWhere .= ' AND o.place_order_time >= :placeOrderTimeBegin ';
+            $sqlParam[':placeOrderTimeBegin'] = $param['placeOrderTimeBegin'];
+        }
+        if (CommonTools::isValidParam($param['placeOrderTimeEnd'])) {
+            $sqlWhere .= ' AND o.place_order_time <= :placeOrderTimeEnd ';
+            $sqlParam[':placeOrderTimeEnd'] = $param['placeOrderTimeEnd'];
+        }
+        if (CommonTools::isValidParam($param['showStartTime']) or CommonTools::isValidParam($param['showEndTime'])) {
+            $sqlFrom .= ' INNER JOIN cps_product AS pdt ON o.product_id = pdt.product_id ';
+            if (CommonTools::isValidParam($param['showStartTime'])) {
+                $sqlWhere .= ' AND pdt.show_start_time >= :showStartTime ';
+                $sqlParam[':showStartTime'] = $param['showStartTime'];
+            }
+            if (CommonTools::isValidParam($param['showEndTime'])) {
+                $sqlWhere .= ' AND pdt.show_end_time <= :showEndTime ';
+                $sqlParam[':showEndTime'] = $param['showEndTime'];
+            }
+        }
+
+        $sql = $sqlSelect . $sqlFrom . $sqlWhere;
+        $sqlCount = ' SELECT COUNT(*) AS count ' . $sqlFrom . $sqlWhere;
+        unset($sqlSelect);
+        unset($sqlFrom);
+        unset($sqlWhere);
+
+        if (CommonTools::isValidParam($param['limit'])) {
+            // 这里使用:limit这种参数方式会出问题，还是直接拼接，使用intval更安全t
+            $sql .= " LIMIT " . intval($param['limit']);
+            if (CommonTools::isValidParam($param['start'])) {
+                $sql .= " OFFSET " . intval($param['start']);
+            }
+        }
 
         try {
-            // 初始化动态SQL
-            $sqlSelect = 'SELECT
-                a.vendor_id AS vendorId,
-                a.account_name AS vendorName,
-                p.purchase_type AS purchaseType,
-                p.purchase_time AS purchaseTime,
-                o.order_id AS orderId,
-                o.place_order_time AS placeOrderTime,
-                o.sign_contract_time AS signContractTime,
-                o.return_time AS returnTime,
-                o.product_id AS productId,
-                p.purchase_order_id AS purchaseOrderId,
-                p.purchase_cost AS purchaseCost,
-                p.expense_ratio AS expenseRatio,
-                p.expense,
-                p.purchase_state AS purchaseState,
-                p.invoice_state AS invoiceState ';
-            $sqlFrom = '
-                FROM bb_account AS a
-                    INNER JOIN cps_order AS o ON a.vendor_id = o.vendor_id
-                    INNER JOIN cps_purchase_order AS p ON o.order_id = p.order_id ';
-            $sqlWhere = '
-                WHERE 0 = 0 ';
-            $sqlParam = array();
-            if ($this->isValidParam($param['vendorId'])) {
-                $sqlWhere .= ' AND a.vendor_id = :vendorId ';
-                $sqlParam[':vendorId'] = $param['vendorId'];
-            }
-            if ($this->isValidParam($param['vendorName'])) {
-                $sqlWhere .= ' AND a.account_name LIKE :vendorName ';
-                $sqlParam[':vendorName'] = '%' . $param['vendorName'] . '%';
-            }
-            if ($this->isValidParam($param['purchaseType'])) {
-                $sqlWhere .= ' AND p.purchase_type = :purchaseType ';
-                $sqlParam[':purchaseType'] = $param['purchaseType'];
-            }
-            if ($this->isValidParam($param['purchaseState'])) {
-                $sqlWhere .= ' AND p.purchase_state = :purchaseState ';
-                $sqlParam[':purchaseState'] = $param['purchaseState'];
-            }
-            if ($this->isValidParam($param['placeOrderTimeBegin'])) {
-                $sqlWhere .= ' AND o.place_order_time >= :placeOrderTimeBegin ';
-                $sqlParam[':placeOrderTimeBegin'] = $param['placeOrderTimeBegin'];
-            }
-            if ($this->isValidParam($param['placeOrderTimeEnd'])) {
-                $sqlWhere .= ' AND o.place_order_time <= :placeOrderTimeEnd ';
-                $sqlParam[':placeOrderTimeEnd'] = $param['placeOrderTimeEnd'];
-            }
-            if ($this->isValidParam($param['showStartTime']) or $this->isValidParam($param['showEndTime'])) {
-                $sqlFrom .= ' INNER JOIN cps_product AS pdt ON o.product_id = pdt.product_id ';
-                if ($this->isValidParam($param['showStartTime'])) {
-                    $sqlWhere .= ' AND pdt.show_start_time >= :showStartTime ';
-                    $sqlParam[':showStartTime'] = $param['showStartTime'];
-                }
-                if ($this->isValidParam($param['showEndTime'])) {
-                    $sqlWhere .= ' AND pdt.show_end_time <= :showEndTime ';
-                    $sqlParam[':showEndTime'] = $param['showEndTime'];
-                }
-            }
-
-            $sql = $sqlSelect . $sqlFrom . $sqlWhere;
-            $sqlCount = ' SELECT COUNT(*) AS count ' . $sqlFrom . $sqlWhere;
-            unset($sqlSelect);
-            unset($sqlFrom);
-            unset($sqlWhere);
-
-            if ($this->isValidParam($param['limit'])) {
-                // 这里使用:limit这种参数方式会出问题，还是直接拼接，使用intval更安全t
-                $sql .= " LIMIT " . intval($param['limit']);
-                if ($this->isValidParam($param['start'])) {
-                    $sql .= " OFFSET " . intval($param['start']);
-                }
-            }
-
             $sqlRows = $this->dbRO->createCommand($sql)->queryAll(true, $sqlParam);
             $count = $this->dbRO->createCommand($sqlCount)->queryScalar($sqlParam);
             $result = array("count" => $count, "rows" => $sqlRows);
-
-        } catch (BBException $e) {
-            throw $e;
         } catch (Exception $e) {
-            throw new BBException(ErrorCode::ERR_231550, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231550)], "向数据库查询推广报表异常: " . $e->getMessage(), $e);
+            throw new BBException(ErrorCode::ERR_231550, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231550)],
+                            BPMonitor::getMoniter($monitorPos).Symbol::CONS_DOU_COLON.$sql.Symbol::CONS_DOU_COLON."向数据库查询竞拍列表异常", $e);
+        }
+
+        $bbLog = new BBLog();
+        if ($bbLog->isInfo()) {
+            $bbLog->logSql(CommonTools::fillSqlParams($sql . ";\n" . $sqlCount, $sqlParam), $monitorPos,
+                            400, __METHOD__ . Symbol::CONS_DOU_COLON . __LINE__);
         }
 
         return $result;
     }
 
-    /**
-     * 判断是否是有效的参数，只有空字符串（""）和null值是无效的，其他值包括0都是有效的
-     */
-    private function isValidParam($param) {
-        return !is_null($param) and $param !== "";
-    }
 	
 }
