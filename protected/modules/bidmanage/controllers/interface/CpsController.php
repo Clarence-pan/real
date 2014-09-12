@@ -20,31 +20,30 @@ class CpsController extends restSysServer {
     }
     
     /**
-	 * 查询消费明细列表
+	 * 获取费率
 	 */
-	public function doRestGetExpenseinfo($url, $data) {
+	public function doRestGetExpenseratio($url, $data) {
 		
+		// 初始化返回结果
 		$result = $this->genrateReturnRest();
 		
 		try {
 			// 校验参数
-			if (!empty($data['expenseType']) && is_numeric($data['expenseType']) && isset($data['start']) 
-				&& !empty($data['limit']) && is_numeric($data['start']) && is_numeric($data['limit']) ) {
+			if (!empty($data['uid']) && !empty($data['nickname'])) {
 					
-				// 查询财务账户报表
-				$data['accountId'] = $this->getAccountId();
-				$resultMod = $this->fmis->getExpenseInfo($data);
+				// 配置费率
+				$dataRe = $this->cpsMod->getExpenseRatio($data);
 				
 				// 整合结果，自定义编码和语句
-				$result['data'] = $resultMod;
 				$result['errorCode'] = ErrorCode::ERR_231500;
 				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231500)];
+				$result['data'] = $dataRe;
 				
 				// 返回结果
 				$this->returnRestStand($result);
 				
 			} else {
-				
+				$result['success'] = Symbol::CONS_FALSE;
 				$result['errorCode'] = ErrorCode::ERR_210000;
 				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_210000)];
 				// 返回参数不正确
@@ -52,7 +51,7 @@ class CpsController extends restSysServer {
 				
 			}
 		} catch(BBException $e) {
-			$result['success'] = false;
+			$result['success'] = Symbol::CONS_FALSE;
 			if (intval(chr(48)) != $e->getErrCode()) {
 				$result['errorCode'] = $e->getErrCode();
 				$result['msg'] = $e->getErrMessage();
@@ -66,14 +65,175 @@ class CpsController extends restSysServer {
 		} catch(Exception $e) {
 			// 注入异常和日志
 			new BBException($e->getCode(), $e->getMessage());
-			$result['success'] = false;
+			$result['success'] = Symbol::CONS_FALSE;
 			$result['errorCode'] = ErrorCode::ERR_231000;
 			$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231000)];
 			// 返回结果
 			$this->returnRestStand($result);
 		}
 	}
-
+    
+    /**
+	 * 配置费率
+	 */
+	public function doRestPostConfigexpenseratio($data) {
+		
+		// 初始化返回结果
+		$result = $this->genrateReturnRest();
+		
+		try {
+			// 校验参数
+			if (!empty($data['expenseRatio']) && !empty($data['uid']) && !empty($data['nickname'])) {
+					
+				// 配置费率
+				$this->cpsMod->configExpenseRatio($data);
+				
+				// 整合结果，自定义编码和语句
+				$result['errorCode'] = ErrorCode::ERR_231511;
+				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231511)];
+				
+				// 返回结果
+				$this->returnRestStand($result);
+				
+			} else {
+				$result['success'] = Symbol::CONS_FALSE;
+				$result['errorCode'] = ErrorCode::ERR_210000;
+				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_210000)];
+				// 返回参数不正确
+				$this->returnRestStand($result);
+				
+			}
+		} catch(BBException $e) {
+			$result['success'] = Symbol::CONS_FALSE;
+			if (intval(chr(48)) != $e->getErrCode()) {
+				$result['errorCode'] = $e->getErrCode();
+				$result['msg'] = $e->getErrMessage();
+			} else {
+				$result['errorCode'] = ErrorCode::ERR_231000;
+				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231000)];
+			}
+			
+			// 返回结果
+			$this->returnRestStand($result);
+		} catch(Exception $e) {
+			// 注入异常和日志
+			new BBException($e->getCode(), $e->getMessage());
+			$result['success'] = Symbol::CONS_FALSE;
+			$result['errorCode'] = ErrorCode::ERR_231000;
+			$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231000)];
+			// 返回结果
+			$this->returnRestStand($result);
+		}
+	}
+	
+	/**
+	 * 获取网站显示的产品
+	 */
+	public function doRestGetShowcpsproduct($url, $data) {
+		
+		// 初始化返回结果
+		$result = $this->genrateReturnRest();
+		
+		try {
+			// 校验参数
+			if (!empty($data['webClass']) && !empty($data['startCityCode']) && !empty($data['productType']) && isset($data['blockName'])) {
+					
+				// 获取网站显示的产品
+				$dataRe = $this->cpsMod->getShowCpsProduct($data);
+				
+				// 整合结果，自定义编码和语句
+				$result['errorCode'] = ErrorCode::ERR_231500;
+				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231500)];
+				$result['data'] = $dataRe;
+				
+				// 返回结果
+				$this->returnRestStand($result);
+				
+			} else {
+				$result['success'] = Symbol::CONS_FALSE;
+				$result['errorCode'] = ErrorCode::ERR_210000;
+				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_210000)];
+				// 返回参数不正确
+				$this->returnRestStand($result);
+				
+			}
+		} catch(BBException $e) {
+			$result['success'] = Symbol::CONS_FALSE;
+			if (intval(chr(48)) != $e->getErrCode()) {
+				$result['errorCode'] = $e->getErrCode();
+				$result['msg'] = $e->getErrMessage();
+			} else {
+				$result['errorCode'] = ErrorCode::ERR_231000;
+				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231000)];
+			}
+			
+			// 返回结果
+			$this->returnRestStand($result);
+		} catch(Exception $e) {
+			// 注入异常和日志
+			new BBException($e->getCode(), $e->getMessage());
+			$result['success'] = Symbol::CONS_FALSE;
+			$result['errorCode'] = ErrorCode::ERR_231000;
+			$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231000)];
+			// 返回结果
+			$this->returnRestStand($result);
+		}
+	}
+	
+	/**
+	 * 网站删除区块，同步数据
+	 */
+	public function doRestGetDelcpsblock($url, $data) {
+		
+		// 初始化返回结果
+		$result = $this->genrateReturnRest();
+		
+		try {
+			// 校验参数
+			if (!empty($data['webClass']) && !empty($data['startCityCode']) && !empty($data['productType']) 
+				&& isset($data['delBlockName']) && isset($data['defaultBlockName'])) {
+					
+				// 网站删除区块，同步数据
+				$this->cpsMod->delCpsBlock($data);
+				
+				// 整合结果，自定义编码和语句
+				$result['errorCode'] = ErrorCode::ERR_231500;
+				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231500)];
+				
+				// 返回结果
+				$this->returnRestStand($result);
+				
+			} else {
+				$result['success'] = Symbol::CONS_FALSE;
+				$result['errorCode'] = ErrorCode::ERR_210000;
+				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_210000)];
+				// 返回参数不正确
+				$this->returnRestStand($result);
+				
+			}
+		} catch(BBException $e) {
+			$result['success'] = Symbol::CONS_FALSE;
+			if (intval(chr(48)) != $e->getErrCode()) {
+				$result['errorCode'] = $e->getErrCode();
+				$result['msg'] = $e->getErrMessage();
+			} else {
+				$result['errorCode'] = ErrorCode::ERR_231000;
+				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231000)];
+			}
+			
+			// 返回结果
+			$this->returnRestStand($result);
+		} catch(Exception $e) {
+			// 注入异常和日志
+			new BBException($e->getCode(), $e->getMessage());
+			$result['success'] = Symbol::CONS_FALSE;
+			$result['errorCode'] = ErrorCode::ERR_231000;
+			$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231000)];
+			// 返回结果
+			$this->returnRestStand($result);
+		}
+	}
+    
     /**
      * 查询推广报表
      * /public/cps/cpsshowreport
@@ -239,4 +399,5 @@ class CpsController extends restSysServer {
             }
         }
     }
+    
 }
