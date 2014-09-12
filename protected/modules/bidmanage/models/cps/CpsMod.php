@@ -719,13 +719,20 @@ class CpsMod {
 
 		// 初始化返回结果
 		$result = array();
+		$result['flag'] = Symbol::CONS_FALSE;
 
 		try {
 			// 添加监控
 			$posTry = BPMoniter::createMoniter(__METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
 			
 			// 查询网站显示的产品
-			$result = $this->cpsDao->queryCpsVendor($param);
+			$resultDb = $this->cpsDao->queryCpsVendor($param);
+			
+			// 判断是否开通了协议
+			if (!empty($resultDb) && is_array($resultDb)) {
+				$result['flag'] = Symbol::CONS_TRUE;
+				$result['showEndDate'] = $resultDb['showEndDate'];
+			}
 			
 			// 结束监控
 			BPMoniter::endMoniter($posTry, Symbol::TWO_HUNDRED, __LINE__);
