@@ -92,6 +92,8 @@
  	
  	const SUSPENMSION = '...';
  	
+ 	const DEFAULT_BLICK = '其他产品推荐';
+ 	
  	/*** 常用字符串 end***/
  }
 ?>
