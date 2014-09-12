@@ -68,7 +68,7 @@ class CommonTools {
     public static function mapUtf8ToGbk(&$values) {
         if (is_array($values)){
             foreach ($values as &$value) {
-                $value = static::mapUtf8ToGbk($value);
+                $value = self::mapUtf8ToGbk($value);
             }
         } else if (is_string($values)){
             $values = iconv('utf-8', 'gbk', $values);
