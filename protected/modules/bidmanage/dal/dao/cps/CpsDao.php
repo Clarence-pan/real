@@ -710,7 +710,7 @@ class CpsDao extends DaoModule {
             throw $e;
         } catch (Exception $e) {
             // 抛异常
-			throw new BBException(ErrorCode::ERR_231600, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231600)], $sqlRow."向数据库查询CPS供应商异常", $e);
+			throw new BBException(ErrorCode::ERR_231550, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231550)], $sqlRow."向数据库查询CPS供应商异常", $e);
         }
 	}
 	
