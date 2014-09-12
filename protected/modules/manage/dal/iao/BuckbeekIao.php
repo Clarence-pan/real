@@ -1250,7 +1250,6 @@ class BuckbeekIao {
     public static function getCpsShowReport($params) {
         $client = new RESTClient();
         $url = Yii::app()->params['BB_HOST'] . 'bb/public/cps/cpsshowreport';
-        var_dump($url);
         try {
             $response = $client->get($url, $params);
         } catch(Exception $e) {
