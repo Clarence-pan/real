@@ -1254,7 +1254,7 @@ class CpsMod {
     public function getShowReport($param) {
         // 填充日志
         if ($this->bbLog->isInfo()) {
-            $this->bbLog->logMethod($param, $param['loginName'] . '|' . $param['nickname'] . '(ID:'. $param['agencyId'] . '|' . $param['uid'] . ")查询推广报表", __METHOD__.Symbol::CONS_DOU_COLON.__LINE__, chr(50));
+            $this->bbLog->logMethod($param, $param['loginName'] . chr(124) . $param['nickname'] . '(ID:'. $param['agencyId'] . chr(124) . $param['uid'] . ")查询推广报表", __METHOD__.Symbol::CONS_DOU_COLON.__LINE__, chr(50));
         }
 
         try {
