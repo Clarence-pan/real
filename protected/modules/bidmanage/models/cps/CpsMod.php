@@ -1261,7 +1261,7 @@ class CpsMod {
             $result = $this->cpsDao->getShowReport($param);
             foreach ($result['rows'] as &$row) {
                 $row['problem'] = '未提出';
-                $row['expenseRatio'] = strval($row['expenseRatio'] * 100) . '%';
+                $row['expenseRatio'] = strval($row['expenseRatio'] * 100) . chr(37); // 添加%
                 $row['purchaseType'] = DictionaryTools::getPurchaseType($row['purchaseType']);
             }
             return $result;
