@@ -3,6 +3,7 @@
 Yii::import('application.modules.bidmanage.dal.dao.cps.CpsDao');
 Yii::import('application.modules.bidmanage.dal.iao.RorProductIao');
 Yii::import('application.modules.bidmanage.dal.iao.TuniuIao');
+Yii::import('application.modules.bidmanage.dal.iao.CpsIao');
 
 /**
  * CPS业务处理类
@@ -141,8 +142,12 @@ class CpsMod {
 		    $webClassesOther = $webClasses['web_class'];
 			
 			// 调用网站区块，如果没有区块直接返回空
-			$tuniuBlock = array();
-			$tuniuBlock = array(array('blockId' => 1, 'blockName' => 'aaaa', 'webClass' => 426),array('blockId' => 2, 'blockName' => 'bbb', 'webClass' => 428));
+			$tuniuParam = array();
+			$tuniuParam['webClass'] = $param['webClass'];
+			$tuniuParam['startCityCode'] = $param['startCityCode'];
+			$tuniuParam['productType'] = $param['productType'];
+			$tuniuBlock = CpsIao::queryTuniuCpsBlocks($tuniuParam);
+			// $tuniuBlock = array(array('blockName' => 'aaaa', 'webClass' => 426),array('blockName' => 'bbb', 'webClass' => 428));
 			if (empty($tuniuBlock) && !is_array($tuniuBlock)) {
 				// 结束监控
 				BPMoniter::endMoniter($posTry, Symbol::ONE_THOUSAND, __LINE__);
@@ -264,12 +269,13 @@ class CpsMod {
 			// 整合区块维度
 			$blocksInfo = array();
 			foreach($tuniuBlock as $tuniuBlockObj) {
-				$blocksTemp = array();
-				$blocksTemp['blockId'] = $tuniuBlockObj['blockId'];
-				$blocksTemp['blockName'] = $tuniuBlockObj['blockName'];
-				$blocksTemp['webClass'] = $tuniuBlockObj['webClass'];
-				$blocksTemp['products'] = array();
-				$blocksInfo[$blocksTemp['blockId']] = $blocksTemp;
+				if (!empty($tuniuBlockObj) && '' != $tuniuBlockObj) {
+					$blocksTemp = array();
+					$blocksTemp['blockName'] = $tuniuBlockObj;
+					$blocksTemp['webClass'] = $param['webClass'];
+					$blocksTemp['products'] = array();
+					$blocksInfo[$tuniuBlockObj] = $blocksTemp;
+				}
 			}
 			
 			// 整合已存在区块数据
@@ -295,6 +301,7 @@ class CpsMod {
 					$rorRowProductIds[] = $rowsObj['productId'];
 				}
 				// 获取已下线的产品ID
+				$productsDbIds = array_unique($productsDbIds);
 				$productsDbIds = array_diff($productsDbIds, $rorRowProductIds);
 				// 查询产品名称
 				$proIdNames = $this->cpsDao->getExistsProductNameId($productsDbIds, chr(49));
@@ -311,10 +318,10 @@ class CpsMod {
 					$productsTemp['productType'] = $productsDbObj['product_type'];
 					$productsTemp['productName'] = empty($rorRows[$productsDbObj['product_id']]) ? $proIdNamesKv[$productsDbObj['product_id']] : $rorRows[$productsDbObj['productName']];
 					$productsTemp['checkerFlag'] = empty($rorRows[$productsDbObj['product_id']]) ? chr(49) : chr(50);
-					$productsTemp['tuniuPrice'] = empty($rorRows[$productsDbObj['product_id']]) ? $productsDbObj['tuniu_price'] : $rorRows[$productsDbObj['product_id']]['tuniuPrice'];
+					$productsTemp['tuniuPrice'] = empty($rorRows[$productsDbObj['product_id']]) ? $productsDbObj['tuniu_price'] : intval($rorRows[$productsDbObj['product_id']]['tuniuPrice']);
 					$productsTemp['isPrinciple'] = $productsDbObj['is_principle'];
 	 				$productsTemp['delEnable'] = ($now == $productsDbObj['add_time'] ?　chr(48) : chr(49));
-					$blocksInfo[$productsDbObj['block_id']]['products'][] = $productsTemp; 
+					$blocksInfo[$productsDbObj['block_name']]['products'][] = $productsTemp; 
 				}
 				foreach ($blocksInfo as $key => $val) {
 					$blocksInfoTrue[] = $val;
@@ -353,6 +360,10 @@ class CpsMod {
 
 		// 逻辑全部在异常块里执行，代码量不要超过200，超过200需要另抽方法
 		try {
+			
+			// 初始化当前时间
+			$now = date(Sundry::TIME_Y_M_D_H_I_S);
+			
 			// 添加监控
 			$posTry = BPMoniter::createMoniter(__METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
 			$flag = Symbol::BPM_EIGHT_HUNDRED;
@@ -361,14 +372,25 @@ class CpsMod {
 			$blocks = $param['blocks'];
 			$blockIds = array();
 			foreach ($blocks as $blocksObj) {
-				$blockIds[] = $blocksObj['blockId'];
+				$blockIds[] = $blocksObj['blockName'];
 			}
 			
 			// 初始化需要批量执行的SQL
 			$sqlData = array();
 			
 			// 读取网站区块，并且给出提示
-			
+			$tuniuParam = array();
+			$tuniuParam['webClass'] = $param['webClass'];
+			$tuniuParam['startCityCode'] = $param['startCityCode'];
+			$tuniuParam['productType'] = $param['productType'];
+			$tuniuBlock = CpsIao::queryTuniuCpsBlocks($tuniuParam);
+			// $tuniuBlock = array(array('blockName' => 'aaaa', 'webClass' => 426),array('blockName' => 'bbb', 'webClass' => 428));
+//			if (empty($tuniuBlock) && !is_array($tuniuBlock)) {
+//				// 结束监控
+//				BPMoniter::endMoniter($posTry, Symbol::ONE_THOUSAND, __LINE__);
+//				// 返回结果
+//        		return $result; 
+//			}
 			
 			
 			// 查询现有区块
@@ -379,7 +401,7 @@ class CpsMod {
 			$existsInfoBlock = $existsInfo['block'];
 			if (!empty($existsInfoBlock) && is_array($existsInfoBlock)) {
 				foreach ($existsInfoBlock as $existsInfoBlockObj) {
-					$blockDbIds[] = $existsInfoBlockObj['block_id'];
+					$blockDbIds[] = $existsInfoBlockObj['block_name'];
 				}
 				unset($existsInfoBlock);
 			}
@@ -391,7 +413,7 @@ class CpsMod {
 			$blockUpd = array_intersect($blockIds, $blockDbIds);
 				
 			// 生成删除区块的SQL
-			$sqlData[] = "update cps_product set del_flag = 1, uid = ".$param['agencyId']." where vendor_id = ".$param['agencyId']." and web_class = ".$param['webClass']." and start_city_code = ".$param['startCityCode']." and block_id in (".implode(chr(44), $blockDel).")";
+			$sqlData[] = "update cps_product set cps_flag = 2, uid = ".$param['agencyId'].", show_end_date = '".$now."' where vendor_id = ".$param['agencyId']." and web_class = ".$param['webClass']." and start_city_code = ".$param['startCityCode']." and block_name in (".implode(chr(44), $blockDel).")";
 			
 			// 生成新增区块和新增产品的SQL
 			$blockProductAdd = array();
@@ -399,25 +421,27 @@ class CpsMod {
 			$productNameIds = array();
 			$productNameIdKv = array();
 			foreach ($blocks as $blocksObj) {
-				if (in_array($blocksObj['blockId'], $blockAdd)) {
+				if (in_array($blocksObj['blockName'], $blockAdd)) {
 					// 新增区块
 					$proArr = $blocksObj['products'];
 					foreach ($proArr as $proArrObj) {
-						$blockProductAddTemp['blockId'] = $blocksObj['blockId'];
+						$blockProductAddTemp['blockName'] = $blocksObj['blockName'];
 						$blockProductAddTemp['productId'] = $proArrObj['productId'];
 						$blockProductAddTemp['isPrincipal'] = $proArrObj['isPrincipal'];
+						$blockProductAddTemp['tuniuPrice'] = $proArrObj['tuniuPrice'];
 						$blockProductAdd[] = $blockProductAddTemp;
 						$productNameIds[] = $proArrObj['productId'];
 						$productNameIdKv[$proArrObj['productId']] = $proArrObj['productName'];
 					}
-				} else if (in_array($blocksObj['blockId'], $blockUpd)) {
+				} else if (in_array($blocksObj['blockName'], $blockUpd)) {
 					// 新增产品
 					$proArr = $blocksObj['products'];
 					foreach ($proArr as $proArrObj) {
 						if (intval(chr(48)) > $proArrObj['dbId']) {
-							$blockProductAddTemp['blockId'] = $blocksObj['blockId'];
+							$blockProductAddTemp['blockName'] = $blocksObj['blockName'];
 							$blockProductAddTemp['productId'] = $proArrObj['productId'];
 							$blockProductAddTemp['isPrincipal'] = $proArrObj['isPrincipal'];
+							$blockProductAddTemp['tuniuPrice'] = $proArrObj['tuniuPrice'];
 							$blockProductAdd[] = $blockProductAddTemp;
 							$productNameIds[] = $proArrObj['productId'];
 							$productNameIdKv[$proArrObj['productId']] = $proArrObj['productName'];
@@ -428,20 +452,37 @@ class CpsMod {
 				}
 			}
 			// 生成需要新增的产品和区块
-			$column = array('block_id', 'product_id', 'is_principal', 'web_class', 'product_type', 'vendor_id',  
-							'start_city_code', 'add_uid', 'add_time', 'update_uid');
-			$columnValue = array('blockId', 'productId', 'isPrincipal');
-			$defaultValue = array($param['webClass'], $param['productType'], $param['agencyId'], $param['startCityCode'], $param['agencyId'], date('Y-m-d H:i:s'), $param['agencyId']);
+			$column = array('block_name', 'product_id', 'is_principal', 'tuniu_price', 'show_start_date', 'web_class', 'product_type', 
+							'vendor_id', 'start_city_code', 'add_uid', 'add_time', 'update_uid');
+			$columnValue = array('blockName', 'productId', 'isPrincipal', 'tuniuPrice');
+			$defaultValue = array($now, $param['webClass'], $param['productType'], $param['agencyId'], $param['startCityCode'], $param['agencyId'], $now, $param['agencyId']);
 			$sqlAdd = $this->_comdbMod->generateComInsert("cps_product", $column, $columnValue, $blockProductAdd, $defaultValue);
 			$sqlData = array_merge($sqlData, $sqlAdd);
 			unset($blockProductAdd);
 			
 			// 查询产品表，刷新名称
+			$productNameIds = array_unique($productNameIds);
 			$productNameIdsDb = $this->cpsDao->getExistsProductNameId($productNameIds, chr(48));
+			$proNameUpdSql = array();
 			$productNameIdsDbArr = array();
 			foreach($productNameIdsDb as $productNameIdsDbObj) {
 				$productNameIdsDbArr[] = $productNameIdsDbObj['product_id'];
+				$proNameUpdSqlTemp = array();
+				$proNameUpdSqlTemp['id'] = $productNameIdsDbObj['id'];
+				$proNameUpdSqlTemp['productName'] = $productNameIdKv[$productNameIdsDbObj['product_id']];
+				$proNameUpdSql[] = $proNameUpdSqlTemp;
 			}
+			
+			// 生成SQL，并批量更新产品名称表
+			$column = array('id', 'product_name', 'update_uid');
+			$columnValue = array('id', 'productName');
+			$updateColumn = array('product_name', 'update_uid');
+			$defaultValue = array($param['agencyId']);
+			$sqlToUpds = $this->_comdbMod->generateComUpdate("cps_product_name", $column, $columnValue, $proNameUpdSql, $defaultValue, $updateColumn);
+			$this->productDao->executeSql($sqlToUpds, DaoModule::SALL);
+			unset($proNameUpdSql);
+			unset($sqlToUpds);
+			
 			$proNameGap = array_diff($productNameIds, $productNameIdsDbArr);
 			// 生成SQL数据
 			$proNameGapSql = array();
@@ -450,13 +491,16 @@ class CpsMod {
 				$proNameGapSqlTemp['productName'] = htmlspecialchars($productNameIdKv[$proNameGapObj]);
 				$proNameGapSql[] = $proNameGapSqlTemp;
 			}
-			// 生成插表SQL
-			$column = array('product_id', 'product_name', 'account_id', 'start_city_code', 'product_type', 'add_uid', 'add_time');
+			
+			// 生成产品表插表SQL
+			$column = array('product_id', 'product_name', 'add_uid', 'add_time', 'update_uid');
 			$columnValue = array('productId', 'productName');
-			$defaultValue = array($param['accountId'], $param['startCityCode'], $param['productType'], $param['accountId'], date('Y-m-d H:i:s'));
-			$sqlAdd = $this->_comdbMod->generateComInsert("bid_product", $column, $columnValue, $proNameGapSql, $defaultValue);
+			$defaultValue = array($param['accountId'], $now, $param['accountId']);
+			$sqlAdd = $this->_comdbMod->generateComInsert("cps_product_name", $column, $columnValue, $proNameGapSql, $defaultValue);
 			$sqlData = array_merge($sqlData, $sqlAdd);
 			unset($proNameGapSql);
+			
+			
 			
 			// 生成修改区块删除的SQL
 			$dbId = array();
@@ -464,17 +508,15 @@ class CpsMod {
 			$existsProduct = $existsInfo['product'];
 			if (!empty($existsProduct) && is_array($existsProduct)) {
 				foreach ($existsProduct as $existsProductObj) {
-					if (in_array($existsProductObj['block_id'], $blockUpd)) {
+					if (in_array($existsProductObj['block_name'], $blockUpd)) {
 						$dbId[] = $existsProductObj['id'];
 					}
 				}
 				// 需要删除的产品
 				$productDelId = array_diff($dbId, $frontId);
 				// 生成需要删除的产品
-				$sqlData[] = "update cps_product set del_flag = 1, uid = ".$param['agencyId']." where id in (".implode(chr(44), $productDelId).")";
+				$sqlData[] = "update cps_product set cps_flag = 2, uid = ".$param['agencyId'].", show_end_date = '".$now."' where id in (".implode(chr(44), $productDelId).")";
 			}
-			
-			// 向网站推送数据
 			
 			// 执行数据库操作
 			$this->cpsDao->executeSql($sqlData, DaoModule::SALL);
@@ -495,10 +537,188 @@ class CpsMod {
 	}
 	
 	/**
-	 * 同步区块和产品
+	 * 获取费率
 	 */
-	public function syncCpsBlockProduct($param) {
-		
+	public function getExpenseRatio($param) {
+		// 填充日志
+		if ($this->bbLog->isInfo()) {
+			$this->bbLog->logMethod($param, $param['nickname']."获取CPS费率".$param['expenseRatio'], __METHOD__.Symbol::CONS_DOU_COLON.__LINE__, chr(50));
+		}
+
+		// 初始化返回结果
+		$result = array();
+
+		try {
+			// 添加监控
+			$posTry = BPMoniter::createMoniter(__METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
+			
+			// 配置费率
+			$result = $this->cpsDao->queryExpenseRatio();
+			
+			// 结束监控
+			BPMoniter::endMoniter($posTry, Symbol::FOUR_HUNDRED, __LINE__);
+		} catch (BBException $e) {
+			BPMoniter::endMoniter($posTry, Symbol::BPM_ONE_MILLION, __LINE__);
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+        	// 抛异常
+			throw new BBException($e->getCode(), $e->getMessage(), BPMoniter::getMoniter($posTry).Symbol::CONS_DOU_COLON.$param['nickname']."获取CPS费率发生异常", $e);
+        } 
+        
+        return $result;
+	}
+	
+	/**
+	 * 配置费率
+	 */
+	public function configExpenseRatio($param) {
+		// 填充日志
+		if ($this->bbLog->isInfo()) {
+			$this->bbLog->logMethod($param, $param['nickname']."配置CPS费率".$param['expenseRatio'], __METHOD__.Symbol::CONS_DOU_COLON.__LINE__, chr(50));
+		}
+
+		try {
+			// 添加监控
+			$posTry = BPMoniter::createMoniter(__METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
+			
+			// 配置费率
+			$this->cpsDao->configExpenseRatio($param);
+			
+			// 结束监控
+			BPMoniter::endMoniter($posTry, Symbol::FOUR_HUNDRED, __LINE__);
+		} catch (BBException $e) {
+			BPMoniter::endMoniter($posTry, Symbol::BPM_ONE_MILLION, __LINE__);
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+        	// 抛异常
+			throw new BBException($e->getCode(), $e->getMessage(), BPMoniter::getMoniter($posTry).Symbol::CONS_DOU_COLON.$param['nickname']."配置CPS费率发生异常", $e);
+        } 
+	}
+	
+	/**
+	 * 获取网站显示的产品
+	 */
+	public function getShowCpsProduct($param) {
+		// 填充日志
+		if ($this->bbLog->isInfo()) {
+			$this->bbLog->logMethod($param, "获取网站显示的产品", __METHOD__.Symbol::CONS_DOU_COLON.__LINE__, chr(50));
+		}
+
+		// 初始化返回结果
+		$result = array();
+
+		try {
+			// 添加监控
+			$posTry = BPMoniter::createMoniter(__METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
+			
+			// 查询网站显示的产品
+			$result = $this->cpsDao->queryShowCpsProduct($param);
+			
+			// 结束监控
+			BPMoniter::endMoniter($posTry, Symbol::TWO_HUNDRED, __LINE__);
+		} catch (BBException $e) {
+			BPMoniter::endMoniter($posTry, Symbol::BPM_ONE_MILLION, __LINE__);
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+        	// 抛异常
+			throw new BBException($e->getCode(), $e->getMessage(), BPMoniter::getMoniter($posTry).Symbol::CONS_DOU_COLON."获取网站显示的产品", $e);
+        } 
+        
+        // 返回结果
+        return $result;
+	}
+	
+	/**
+	 * 网站删除区块，同步数据
+	 */
+	public function delCpsBlock($param) {
+		// 填充日志
+		if ($this->bbLog->isInfo()) {
+			$this->bbLog->logMethod($param, "网站删除区块，同步数据", __METHOD__.Symbol::CONS_DOU_COLON.__LINE__, chr(50));
+		}
+
+		try {
+			// 添加监控
+			$posTry = BPMoniter::createMoniter(__METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
+			
+			// 同步网站数据
+			$this->cpsDao->syncCpsBlockProduct($param);
+			
+			// 结束监控
+			BPMoniter::endMoniter($posTry, Symbol::TWO_HUNDRED, __LINE__);
+		} catch (BBException $e) {
+			BPMoniter::endMoniter($posTry, Symbol::BPM_ONE_MILLION, __LINE__);
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+        	// 抛异常
+			throw new BBException($e->getCode(), $e->getMessage(), BPMoniter::getMoniter($posTry).Symbol::CONS_DOU_COLON."网站删除区块，同步数据", $e);
+        }
+	}
+	
+	/**
+	 * 添加CPS供应商
+	 */
+	public function addCpsVendor($param) {
+		// 填充日志
+		if ($this->bbLog->isInfo()) {
+			$this->bbLog->logMethod($param, $param['agencyId']."添加CPS供应商", __METHOD__.Symbol::CONS_DOU_COLON.__LINE__, chr(50));
+		}
+
+		try {
+			// 添加监控
+			$posTry = BPMoniter::createMoniter(__METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
+			
+			// 添加CPS供应商
+			$this->cpsDao->addCpsVendor($param);
+			
+			// 结束监控
+			BPMoniter::endMoniter($posTry, Symbol::TWO_HUNDRED, __LINE__);
+		} catch (BBException $e) {
+			BPMoniter::endMoniter($posTry, Symbol::BPM_ONE_MILLION, __LINE__);
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+        	// 抛异常
+			throw new BBException($e->getCode(), $e->getMessage(), BPMoniter::getMoniter($posTry).Symbol::CONS_DOU_COLON."添加CPS供应商", $e);
+        }
+	}
+	
+	/**
+	 * 查询CPS供应商
+	 */
+	public function getCpsVendor($param) {
+		// 填充日志
+		if ($this->bbLog->isInfo()) {
+			$this->bbLog->logMethod($param, $param['agencyId']."查询CPS供应商", __METHOD__.Symbol::CONS_DOU_COLON.__LINE__, chr(50));
+		}
+
+		// 初始化返回结果
+		$result = array();
+
+		try {
+			// 添加监控
+			$posTry = BPMoniter::createMoniter(__METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
+			
+			// 查询网站显示的产品
+			$result = $this->cpsDao->queryCpsVendor($param);
+			
+			// 结束监控
+			BPMoniter::endMoniter($posTry, Symbol::TWO_HUNDRED, __LINE__);
+		} catch (BBException $e) {
+			BPMoniter::endMoniter($posTry, Symbol::BPM_ONE_MILLION, __LINE__);
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+        	// 抛异常
+			throw new BBException($e->getCode(), $e->getMessage(), BPMoniter::getMoniter($posTry).Symbol::CONS_DOU_COLON."查询CPS供应商", $e);
+        } 
+        
+        // 返回结果
+        return $result;
 	}
 	
 	/**
@@ -511,18 +731,197 @@ class CpsMod {
 		}
 
 		try {
+			// 初始化共通日期
+			$now = date(Sundry::TIME_Y_M_D);
+			$yesterday = date(Sundry::TIME_Y_M_D, time() - 12*60*60);
+			
+			// 过期推广期结束的CPS
+			$this->cpsDao->overdueCps($now);
+			
+			// 同步主从产品数据
+			$this->syncCpsProductGroups();
+			
+			// 刷新订单数据
 			
 			// 调用BOSS订单接口，获取订单信息
+			$orders = CpsIao::getOrders();
 			
+			// 获取订单产品集合
+			$orderProducts = array();
+			foreach($orders as $ordersObj) {
+				$orderProducts[] = $ordersObj['route_id'];
+			}
+			$orderProducts = array_unique($orderProducts);
 			
-			// 调用财务接口，获取采购单信息和结算方式
+			$productRe = $this->getOrderProducts($orderProducts);
+			unset($orderProducts);
+			$existsCpsProKv = $productRe['existsCpsProKv'];
+			$otherExistsGroupKvGroups = $productRe['otherExistsGroupKvGroups'];
+			$otherExistsGroupVkGroups = $productRe['otherExistsGroupVkGroups'];
+			unset($productRe);
 			
+			// 初始化需要处理的订单
+			$needOrders = array();
+			$needOrderIds = array();
+			$productVendorIds = array();
+			// 获取对应的订单
+			foreach($orders as $ordersObj) {
+				// 获取数据库中直接存在的产品的订单
+				if (!empty($existsCpsProKv[$ordersObj['route_id']])) {
+					$existsCpsProKvTemp = $existsCpsProKv[$ordersObj['route_id']];
+					foreach($existsCpsProKvTemp as $existsCpsProKvTempObj) {
+						if ((Sundry::RELEASETIME == $existsCpsProKvTempObj['show_end_time'] 
+							&& $existsCpsProKvTempObj['show_start_time'] < $ordersObj['added_time'])
+							||($existsCpsProKvTempObj['show_start_time'] < $ordersObj['added_time']
+							&& $existsCpsProKvTempObj['show_end_time'] > $ordersObj['added_time'])) {
+							$needOrdersTemp = array();
+							$needOrdersTemp = $ordersObj;
+							$needOrdersTemp['vendor_id'] = $existsCpsProKvTempObj['vendor_id'];
+							$needOrdersTemp['fee_product_id'] = $existsCpsProKvTempObj['product_id'];
+							$needOrdersTemp['cps_id'] = $existsCpsProKvTempObj['id'];
+							$needOrders[$ordersObj['id']]['product_info'][] = $needOrdersTemp;
+							$needOrderIds[] = $ordersObj['id'];
+							$productVendorIds[] = $existsCpsProKvTempObj['vendor_id'];
+						}
+					}
+				} else if (!empty($otherExistsGroupKvGroups[$otherExistsGroupVkGroups[$ordersObj['route_id']]])) {
+					// 获取主从产品关联的产品的订单
+					$otherExistsGroupKvGroupsTemp = $otherExistsGroupKvGroups[$otherExistsGroupVkGroups[$ordersObj['route_id']]];
+					foreach($otherExistsGroupKvGroupsTemp as $otherExistsGroupKvGroupsTempObj) {
+						if ((Sundry::RELEASETIME == $otherExistsGroupKvGroupsTempObj['show_end_time'] 
+							&& $otherExistsGroupKvGroupsTempObj['show_start_time'] < $ordersObj['added_time'])
+							||($otherExistsGroupKvGroupsTempObj['show_start_time'] < $ordersObj['added_time']
+							&& $otherExistsGroupKvGroupsTempObj['show_end_time'] > $ordersObj['added_time'])) {
+							$needOrdersTemp = array();
+							$needOrdersTemp = $ordersObj;
+							$needOrdersTemp['vendor_id'] = $otherExistsGroupKvGroupsTempObj['vendor_id'];
+							$needOrdersTemp['fee_product_id'] = $otherExistsGroupKvGroupsTempObj['product_id'];
+							$needOrdersTemp['cps_id'] = $otherExistsGroupKvGroupsTempObj['id'];
+							$needOrders[$ordersObj['id']]['product_info'][] = $needOrdersTemp;
+							$needOrderIds[] = $ordersObj['id'];
+							$productVendorIds[] = $otherExistsGroupKvGroupsTempObj['vendor_id'];
+						}
+					}
+				}	
+			}
+			unset($existsCpsProKv);
+			unset($otherExistsGroupKvGroups);
+			unset($otherExistsGroupVkGroups);
+			unset($orders);
+			$productVendorIds = array_unique($productVendorIds);
+			$needOrderIds = array_unique($needOrderIds);
 			
-			// 批量插入数据，5000一插
+			// 初始化日志类
+			$bbLog = new BBLog();
 			
+			// 循环获取财务采购单
+			$fmisVendorIds = array();
+			foreach($needOrderIds as $needOrderIdsObj) {
+				$fmisOrder = CpsIao::queryCpsFmisOrder($needOrderIdsObj, $bbLog);
+				foreach($fmisOrder as $fmisOrderObj) {
+					// 只获取地接和打包
+					if (6 == $fmisOrderObj['product_type'] || 23 == $fmisOrderObj['product_type']) {
+						$needOrdersTemp = array();
+						$needOrdersTemp['fmis_id'] = $fmisOrderObj['id'];
+						$needOrdersTemp['total_price'] = $fmisOrderObj['total_price'];
+						$needOrdersTemp['vendor_id'] = $fmisOrderObj['agency_id'];
+						$needOrdersTemp['purchase_order_type'] = $fmisOrderObj['purchase_order_type'];
+						$needOrders[$needOrderIdsObj]['fmis_info'][] = $needOrdersTemp;
+						if (in_array($fmisOrderObj['agency_id'], $productVendorIds)) {
+							$fmisVendorIds[] = $fmisOrderObj['agency_id'];
+						}
+					}
+				}
+				$fmisOrder = null;
+			}
+			unset($needOrderIds);
+			$fmisVendorIds = array_unique($fmisVendorIds);
 			
+			// 获取供应商结算方式
+			$fmisVendorWay = array();
+			foreach($fmisVendorIds as $fmisVendorIdsObj) {
+				$fmisWay = CpsIao::queryCpsFmisWay($fmisVendorIdsObj, $bbLog);
+				if (!empty($fmisWay)) {
+					$fmisVendorWay[$fmisVendorIdsObj] = $fmisWay['agencyAccountType'];
+				}
+				$fmisWay = null;
+			}
+			unset($fmisVendorIds);
+			unset($bbLog);
 			
-			$test = array();
+			$expenseRe = $this->getExpenseOrderRatio($now);
+			$expenseRatioKvFin = $expenseRe['expenseRatioKvFin'];
+			$startDate = $expenseRe['start'];
+			unset($expenseRe);
+			
+			// 生成订单和采购单数据插入数据集合
+			$orderAddData = array();
+			$purchaseOrderAddData = array();
+			foreach($needOrders as $key => $val) {
+				// 生成临时cpsId映射
+				$cpsIdTemp = array();
+				// 生成临时签约时间
+				$signDateTemp = array();
+				
+				// 插入订单数据
+				$productInfo = $val['product_info'];
+				foreach($productInfo as $productInfoObj) {
+					$orderAddDataTemp = array();
+					$orderAddDataTemp['vendorId'] = $productInfoObj['vendor_id'];
+					$orderAddDataTemp['orderId'] = $key;
+					$orderAddDataTemp['placeOrderTime'] = $productInfoObj['added_time'];
+					$orderAddDataTemp['signContractTime'] = $productInfoObj['sign_date'];
+					$orderAddDataTemp['returnTime'] = $yesterday;
+					$orderAddDataTemp['cpsId'] = $productInfoObj['cps_id'];
+					$orderAddDataTemp['productId'] = $productInfoObj['route_id'];
+					$orderAddDataTemp['feeProductId'] = $productInfoObj['fee_product_id'];
+					$orderAddData[] = $orderAddDataTemp;
+					$cpsIdTemp[$orderAddDataTemp['vendorId']] = $orderAddDataTemp['cpsId'];
+					$signDateTemp = $productInfoObj['sign_date'];
+				}
+				
+				// 插入采购单数据
+				$fmisInfo = $val['fmis_info'];
+				foreach($fmisInfo as $fmisInfoObj) {
+					$purchaseOrderAddDataTemp = array();
+					$purchaseOrderAddDataTemp['vendorId'] = $fmisInfoObj['vendor_id'];
+					$purchaseOrderAddDataTemp['orderId'] = $key;
+					$purchaseOrderAddDataTemp['purchaseOrderId'] = $fmisInfoObj['fmis_id'];
+					$purchaseOrderAddDataTemp['purchaseOrderType'] = $fmisInfoObj['purchase_order_type'];
+					$purchaseOrderAddDataTemp['purchaseCost'] = $fmisInfoObj['total_price'];
+					$purchaseOrderAddDataTemp['purchaseType'] = $fmisVendorWay[$purchaseOrderAddDataTemp['vendorId']];
+					$purchaseOrderAddDataTemp['cpsId'] = $cpsIdTemp[$purchaseOrderAddDataTemp['vendorId']];
+					if (empty($expenseRatioKvFin[$signDateTemp])) {
+						$purchaseOrderAddDataTemp['expenseRatio'] = $expenseRatioKvFin[$startDate];
+					} else {
+						$purchaseOrderAddDataTemp['expenseRatio'] = $expenseRatioKvFin[$signDateTemp];
+					}
+					$purchaseOrderAddDataTemp['expense'] = $purchaseOrderAddDataTemp['purchaseCost']*$purchaseOrderAddDataTemp['expenseRatio'];
+					$purchaseOrderAddData[] = $purchaseOrderAddDataTemp;
+				}
+				
+			}
+			unset($needOrders);
+			
+			// 生成新增的订单SQL，并插入
+			$column = array('vendor_id', 'order_id', 'place_order_time', 'sign_contract_time', 'return_time', 'cps_id',
+							'product_id', 'fee_product_id', 'add_uid', 'add_time', 'update_uid');
+			$columnValue = array('vendorId', 'orderId', 'placeOrderTime', 'signContractTime', 'returnTime', 'cpsId', 'productId', 'feeProductId');
+			$defaultValue = array('4333', $now, '4333');
+			$sqlAdd = $this->_comdbMod->generateComInsert("cps_order", $column, $columnValue, $orderAddData, $defaultValue);
+			// 执行数据库操作
+			$this->cpsDao->executeSql($sqlAdd, DaoModule::SALL);
+			unset($orderAddData);
+			unset($sqlAdd);
+			
+			// 生成新增的采购单SQL，并插入
+			$column = array('vendor_id', 'order_id', 'purchase_order_id', 'purchase_order_type', 'purchase_cost', 'purchase_type', 'cps_id', 
+							'expense_ratio', 'expense', 'add_uid', 'add_time', 'update_uid');
+			$columnValue = array('productId', 'productType', 'principalProduct', 'isPrincipal');
+			$defaultValue = array('vendorId', 'orderId', 'purchaseOrderId', 'purchaseOrderType', 'purchaseCost', 'purchaseType', 'cpsId', 'expenseRatio', 'expense');
+			$sqlAdd = $this->_comdbMod->generateComInsert("cps_purchase_order", $column, $columnValue, $purchaseOrderAddData, $defaultValue);
+			// 执行数据库操作
+			$this->cpsDao->executeSql($sqlAdd, DaoModule::SALL);
 			
 		} catch (BBException $e) {
             // 抛异常
@@ -533,50 +932,295 @@ class CpsMod {
         }
 	}
 	
-//	// 存储主从线路映射关系
-//			// 查询已存在的分组线路
-//			$productIds = array();
-//			$productIdNames = array();
-//			foreach($routes as $routesObj) {
-//				$productTemp = $routesObj['products'];
-//				foreach($productTemp as $productTempObj) {
-//					$productIds[] = $productTempObj['productId'];
-//					$productIdNames[$productTempObj['productId']] = $productTempObj['productName'];
-//				}
-//			}
-//			$groupParam['startCityCode'] = $param['startCityCode'];
-//			$groupParam['productIds'] = implode(chr(44), $productIds);
-//			$groupProduct = $this->cpsDao->getGroupProduct($groupParam);
-//			
-//			// 过滤出需要查询的分组产品
-//			$groupProducts = array();
-//			foreach ($groupProduct as $groupProductObj) {
-//				$groupProducts[] = $groupProductObj['product_id'];
-//			}
-//			$diffProducts = array_diff($productIds, $groupProducts);
-//			
-//			// 动态查询搜索分组产品
-//			$rorProducts = array();
-//			$rorParam['productType'] = $param['productType'];
-//			$rorParam['productNameType'] = $param['productType'];
-//			$rorParam['vendorId'] = $param['agencyId'];
-//			$rorParam['startCityCode'] = $param['startCityCode'];
-//			$rorParam['start'] = chr(48);
-//			$rorParam['limit'] = Symbol::TWO_HUNDRED;
-//			foreach($diffProducts as $diffProductsObj) {
-//				$rorParam['productNameKeyword'] = htmlspecialchars($productIdNames[$diffProductsObj]);
-//				$rorProduct = $this->rorProductIao->querySimilarProductList($rorParam);
-//				$tempCount = $rorProduct['data']['count'];
-//				$rorProduct = $rorProduct['data']['rows'];
-//				if (1 < $tempCount) {
-//					$rorParam['showFlag'] = chr(48);
-//					$rorProductMain = $this->rorProductIao->querySimilarProductList($rorParam);
-//					$rorProductMain = $rorProductMain['data']['rows'];
-//					unset($rorParam['showFlag']);
-//				}
-//			}
+	/**
+	 * 同步cps产品组
+	 */
+	public function syncCpsProductGroups() {
+		// 填充日志
+		if ($this->bbLog->isInfo()) {
+			$this->bbLog->logMethod("方法执行无参数", "系统同步CPS产品组", __METHOD__.Symbol::CONS_DOU_COLON.__LINE__, chr(50));
+		}
 
-    /**
+		try {
+			
+			// 同步主从产品数据
+			
+			// 初始化主从产品数据同步数组
+			$mmProArr = array();
+			$now = date(Sundry::TIME_Y_M_D);
+			$yesterday = date(Sundry::TIME_Y_M_D, time() - 12*60*60);
+			
+			// 查询当日的主产品
+			$priProducts = $this->cpsDao->queryCpsProductPriOrNot(chr(49));
+			$priProductIds = array();
+			foreach($priProducts as $priProductsObj) {
+				$priProductIds[] = $priProductsObj['product_id'];
+			}
+			unset($priProducts);
+			
+			// 查询当日的从产品
+			$priNotProducts = $this->cpsDao->queryCpsProductPriOrNot(chr(48));
+			$priNotProductIds = array();
+			foreach($priNotProducts as $priNotProductsObj) {
+				$priNotProductIds[] = $priNotProductsObj['product_id'];
+			}
+			unset($priNotProducts);
+			
+			// 整合所有产品ID
+			$allProductIds = array();
+			$allProductIds = array_merge($allProductIds, $priProductIds);
+			$allProductIds = array_merge($allProductIds, $priNotProductIds);
+			
+			// 查询已经归档的产品组
+			$existsGroup = $this->cpsDao->queryExistsProductGroup($allProductIds);
+			unset($allProductIds);
+			$existsGroupIds = array();
+			foreach($existsGroup as $existsGroupObj) {
+				$existsGroupIds[] = $existsGroupObj['product_id'];
+			}
+			unset($existsGroup);
+			
+			// 过滤主线产品
+			$priProductIds = array_unique($priProductIds);
+			$priProductIds = array_diff($priProductIds, $existsGroupIds);
+			// 过滤从线产品
+			$priNotProductIds = array_diff($priNotProductIds, $existsGroupIds);
+			
+			// 查询主线的名称
+			$priProductIdNames = $this->cpsDao->getExistsProductNameId($priProductIds, chr(49));
+			
+			// 刷新主线路的线路组ID
+			$sqlSyncPri = "UPDATE cps_product SET principal_product = product_id WHERE del_flag = 0 AND is_principal = 1 AND date_format(show_start_time, '%Y-%m-%d') = '".$yesterday."'";
+			$this->cpsDao->dbRW->createCommand($sqlSyncPri)->execute();
+			unset($sqlSyncPri);
+			
+			// 循环初始化主线路集合
+			foreach($priProductIdNames as $priProductIdNamesObj) {
+				$rorParam['classBrandType'] = chr(49);
+				$rorParam['key'] = $priProductIdNamesObj['product_name'];
+				$rorParam['currentPage'] = chr(49);
+				$rorParam['limit'] = Symbol::ONE_THOUSAND;
+				$rorData = CpsIao::queryCpsRorProduct($rorParam);
+				foreach($rorData as $rorDataObj) {
+					$mmProArrObj['productId'] = $rorDataObj['productId'];
+					$mmProArrObj['productType'] = $rorDataObj['classBrandType'];
+					$mmProArrObj['principalProduct'] = $priProductIdNamesObj['product_id'];
+					if ($priProductIdNamesObj['product_id'] == $rorDataObj['productId']) {
+						$mmProArrObj['isPrincipal'] = chr(49);
+					} else {
+						$mmProArrObj['isPrincipal'] = chr(48);
+					}
+					$mmProArr[] = $mmProArrObj;
+				}
+			}
+			unset($priProductIdNames);
+			
+			// 生成新增的主线路SQL，并插入
+			$column = array('product_id', 'product_type', 'principal_product', 'is_principal', 'add_uid', 'add_time', 'update_uid');
+			$columnValue = array('productId', 'productType', 'principalProduct', 'isPrincipal');
+			$defaultValue = array('4333', $now, '4333');
+			$sqlAdd = $this->_comdbMod->generateComInsert("cps_product_group", $column, $columnValue, $mmProArr, $defaultValue);
+			// 执行数据库操作
+			$this->cpsDao->executeSql($sqlAdd, DaoModule::SALL);
+			$mmProArr = array();
+			unset($sqlAdd);
+			
+			// 再次查询已经归档的从线产品组
+			$existsNorPriGroup = $this->cpsDao->queryExistsProductGroup($priNotProductIds);
+			$existsNorPriGroupIds = array();
+			foreach($existsNorPriGroup as $existsNorPriGroupObj) {
+				$existsNorPriGroupIds[] = $existsNorPriGroupObj['product_id'];
+			}
+			
+			// 过滤最后的从线产品
+			$priNotProductIds = array_diff($priNotProductIds, $existsNorPriGroupIds);
+			unset($existsNorPriGroupIds);
+			
+			// 查询主线的名称
+			$priNotProductIdNames = $this->cpsDao->queryProductNameById($priNotProductIds);
+			
+			// 循环初始化从线路集合
+			$priNotTempProductIds = array();
+			foreach($priNotProductIdNames as $priNotProductIdNamesObj) {
+				if(in_array($priNotProductIdNamesObj['product_id'], $priNotTempProductIds)) {
+					continue;
+				}
+				$rorParam['classBrandType'] = chr(49);
+				$rorParam['key'] = $priNotProductIdNamesObj['product_name'];
+				$rorParam['currentPage'] = chr(49);
+				$rorParam['limit'] = Symbol::ONE_THOUSAND;
+				$rorData = CpsIao::queryCpsRorProduct($rorParam);
+				$rorParam['limit'] = chr(49);
+				$rorParam['showFlag'] = chr(48);
+				$rorMainData = CpsIao::queryCpsRorProduct($rorParam);
+				unset($rorParam);
+				if (!empty($rorMainData) && is_array($rorMainData)) {
+					foreach($rorData as $rorDataObj) {
+						$priNotTempProductIds[] = $rorDataObj['productId'];
+						$mmProArrObj['productId'] = $rorDataObj['productId'];
+						$mmProArrObj['productType'] = $rorDataObj['classBrandType'];
+						$mmProArrObj['principalProduct'] = $rorMainData[0]['productId'];
+						if ($rorMainData[0]['productId'] == $rorDataObj['productId']) {
+							$mmProArrObj['isPrincipal'] = chr(49);
+						} else {
+							$mmProArrObj['isPrincipal'] = chr(48);
+						}
+						$mmProArr[] = $mmProArrObj;
+					}
+				}
+			}
+			unset($priNotProductIdNames);
+			
+			// 生成新增的从线路SQL，并插入
+			$column = array('product_id', 'product_type', 'principal_product', 'is_principal', 'add_uid', 'add_time', 'update_uid');
+			$columnValue = array('productId', 'productType', 'principalProduct', 'isPrincipal');
+			$defaultValue = array('4333', $now, '4333');
+			$sqlAdd = $this->_comdbMod->generateComInsert("cps_product_group", $column, $columnValue, $mmProArr, $defaultValue);
+			// 执行数据库操作
+			$this->cpsDao->executeSql($sqlAdd, DaoModule::SALL);
+			unset($mmProArr);
+			unset($sqlAdd);
+			
+			// 获取从线路的产品组线路信息
+			$existsNorPriGroup = $this->cpsDao->queryExistsProductGroup($priNotProductIds);
+			
+			// 生成从线路更新的数据集合
+			$updCpsPro = array();
+			foreach($existsNorPriGroup as $existsNorPriGroupObj) {
+				$updCpsPro[$existsNorPriGroupObj['principal_product']][] = $existsNorPriGroupObj['product_id'];
+			}
+			unset($existsNorPriGroup);
+			
+			// 生成从线路更新的SQL
+			$sqlUpd = array();
+			foreach($updCpsPro as $key=>$val) {
+				$sqlUpd[] = "UPDATE cps_product SET principal_product = ".$key." WHERE del_flag = 0 AND product_id IN (".implode(chr(44), $val).") AND is_principal = 0 AND date_format(show_start_time, '%Y-%m-%d') = '".$yesterday."'";
+			}
+			
+			// 执行更新
+			$this->cpsDao->dbRW->createCommand($sqlUpd)->execute();
+			
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+        	// 抛异常
+			throw new BBException($e->getCode(), $e->getMessage(), "系统同步CPS产品组数据异常", $e);
+        }
+	}
+	
+	/**
+	 * 获取订单费率
+	 */
+	function getExpenseOrderRatio($now) {
+		
+		try {
+			// 查询并生成数据库费率数组
+			$expenseRatioKv = array();
+			$expenseRatio = $this->cpsDao->queryExpenseRatioAll();
+			$startDate = current($expenseRatio);
+			$expenseRatioKv[$startDate['add_time']] = $startDate['expense_ratio'];
+			$startDate = $startDate['add_time'];
+			foreach($expenseRatio as $expenseRatioObj) {
+				$expenseRatioKv[date(Sundry::TIME_Y_M_D, strtotime($expenseRatioObj['add_time']) + Symbol::ONE_DAY_SECOND)] = $expenseRatioObj['expense_ratio'];
+			}
+			unset($expenseRatio);
+			
+			// 获取从开始配置日期到当前日期的所有日期
+			$everyDay = array();
+			$everyDay[] = $startDate;
+			$everyDay = array_merge($everyDay, CommonTools::intervalDate($startDate, $now));
+			$everyDay[] = $now;
+			
+			// 生成最终费率数组
+			$expenseRatioKvFin = array();
+			foreach($everyDay as $everyDayObj) {
+				$expenseRatioTemp = chr(48);
+				if (!empty($expenseRatioKv[$everyDayObj])) {
+					$expenseRatioTemp = $expenseRatioKv[$everyDayObj];
+				}
+				$expenseRatioKvFin[$everyDayObj] = $expenseRatioTemp;
+			}
+			
+			// 整合并返回结果
+			$result['expenseRatioKvFin'] = $expenseRatioKvFin;
+			$result['start'] = $startDate;
+			return $result;
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+        	// 抛异常
+			throw new BBException($e->getCode(), $e->getMessage(), "系统获取订单费率异常", $e);
+        }
+	}
+	
+	/**
+	 * 获取订单产品
+	 */
+	function getOrderProducts($orderProducts) {
+		try {
+			// 获取订单所有产品的产品组信息
+			$existsProGroup = $this->cpsDao->queryExistsProductGroup($orderProducts);
+			
+			$existsProGroupKv = array();
+			$orderExistsOneProducts = array();
+			foreach($existsProGroup as $existsProGroupObj) {
+				$existsProGroupKv[$existsProGroupObj['principal_product']][] = $existsProGroupObj['product_id'];
+				$orderExistsOneProducts[] = $existsProGroupObj['product_id'];
+			}
+			unset($existsProGroup);
+			
+			// 查询推广表中已经存在的产品
+			$existsCpsPro = $this->cpsDao->queryCpsProductShowTime($orderExistsOneProducts, chr(49));
+			$existsCpsProIds = array();
+			$existsCpsProKv = array();
+			foreach($existsCpsPro as $existsCpsProObj) {
+				$existsCpsProIds[] = $existsCpsProObj['product_id'];
+				$existsCpsProKv[$existsCpsProObj['product_id']][] = $existsCpsProObj;
+			}
+			unset($existsCpsPro);
+			
+			// 过滤线路组的其他产品
+			$otherGroupProIds = array_diff($orderExistsOneProducts, $existsCpsProIds);
+			unset($existsCpsProIds);
+			
+			// 过滤需要扣费的其他产品
+			$otherGroupKvGroups = array();
+			foreach($otherGroupProIds as $otherGroupProIdsObj) {
+				foreach($existsProGroupKv as $key => $val) {
+					if (in_array($otherGroupProIdsObj, $val)) {
+						$otherGroupKvGroups[] = $key;
+						break;
+					}
+				}
+			}
+			unset($otherGroupProIds);
+			
+			// 查询推广表中存在的剩余产品组
+			$otherExistsCpsPro = $this->cpsDao->queryCpsProductShowTime($otherGroupKvGroups, chr(50));
+			$otherExistsGroupKvGroups = array();
+			$otherExistsGroupVkGroups = array();
+			foreach($otherExistsCpsPro as $otherExistsCpsProObj) {
+				$otherExistsGroupKvGroups[$otherExistsCpsProObj['principal_product']][] = $otherExistsCpsProObj;
+				$otherExistsGroupVkGroups[$otherExistsCpsProObj['proudtc_id']] = $otherExistsCpsProObj['principal_product'];
+			}
+			
+			// 初始化结果并返回
+			$result['existsCpsProKv'] = $existsCpsProKv;
+			$result['otherExistsGroupKvGroups'] = $otherExistsGroupKvGroups;
+			$result['otherExistsGroupVkGroups'] = $otherExistsGroupVkGroups;
+			return $result;
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+        	// 抛异常
+			throw new BBException($e->getCode(), $e->getMessage(), "系统获取订单产品异常", $e);
+        }
+	}
+	
+	/**
      * 查询推广报表
      * */
     public function getShowReport($param) {
@@ -601,5 +1245,7 @@ class CpsMod {
             throw new BBException($e->getCode(), $e->getMessage(), "系统同步CPS订单异常", $e);
         }
     }
+	
 }
+
 ?>
