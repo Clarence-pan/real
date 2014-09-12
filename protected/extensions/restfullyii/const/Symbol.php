@@ -57,6 +57,9 @@
  	// 200
  	const TWO_HUNDRED = 200;
  	
+ 	// 400
+ 	const FOUR_HUNDRED = 200;
+ 	
  	// 800
  	const BPM_EIGHT_HUNDRED = 800;
  	
@@ -72,6 +75,8 @@
  	// 1000000
  	const BPM_ONE_MILLION = 1000000;
  	
+ 	// 1天的秒数
+ 	const ONE_DAY_SECOND = 86400;
  	
  	//空字符串
  	const EMPTY_STRING = '';

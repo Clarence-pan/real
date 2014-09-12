@@ -69,7 +69,6 @@ class DaoModule {
     		return $result;
     	} catch (Exception $e) {
     		$transaction->rollback();
-    		Yii::log($e);
             throw $e;
 		}
     }
