@@ -423,7 +423,7 @@ class CpsDao extends DaoModule {
 							"add_time, ".
 							"update_uid) ".
 						" VALUES( " .
-							($param['expenseRatio']/100).",".
+							($param['expenseRatio'] / 100).",".
 							$param['uid'].",".
 							"'".date(Sundry::TIME_Y_M_D_H_I_S)."',".
 							$param['uid'].")";
