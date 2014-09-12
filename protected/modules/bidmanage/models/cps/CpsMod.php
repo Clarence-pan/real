@@ -320,7 +320,7 @@ class CpsMod {
 					$productsTemp['checkerFlag'] = empty($rorRows[$productsDbObj['product_id']]) ? chr(49) : chr(50);
 					$productsTemp['tuniuPrice'] = empty($rorRows[$productsDbObj['product_id']]) ? $productsDbObj['tuniu_price'] : intval($rorRows[$productsDbObj['product_id']]['tuniuPrice']);
 					$productsTemp['isPrinciple'] = $productsDbObj['is_principle'];
-	 				$productsTemp['delEnable'] = ($now == $productsDbObj['add_time'] ?　chr(48) : chr(49));
+	 				$productsTemp['delEnable'] = ($now == $productsDbObj['add_time'] ? chr(48) : chr(49));
 					$blocksInfo[$productsDbObj['block_name']]['products'][] = $productsTemp; 
 				}
 				foreach ($blocksInfo as $key => $val) {
