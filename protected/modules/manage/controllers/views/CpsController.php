@@ -30,7 +30,7 @@ class CpsController extends restfulServer{
 	/**
 	 * 获取费率
 	 */
-    public function doRestGetExpenseratio($data) {
+    public function doRestGetExpenseratio($url, $data) {
     	
     	// 校验参数
 		if (!empty($data['uid']) && !empty($data['nickname'])) {
