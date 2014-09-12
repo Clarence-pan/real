@@ -801,15 +801,15 @@ class CpsDao extends DaoModule {
             o.place_order_time AS placeOrderTime,
             o.sign_contract_time AS signContractTime,
             o.return_time AS returnTime,
+            pdt.show_start_time AS showStartTime,
+            pdt.show_end_time AS showEndTime,
             o.product_id AS productId,
             p.purchase_order_id AS purchaseOrderId,
             p.purchase_cost AS purchaseCost,
             p.expense_ratio AS expenseRatio,
             p.expense,
             p.purchase_state AS purchaseState,
-            p.invoice_state AS invoiceState,
-            pdt.show_start_time AS showStartTime,
-            pdt.show_end_time AS showEndTime';
+            p.invoice_state AS invoiceState';
         $sqlFrom = '
             FROM bb_account AS a
                 INNER JOIN cps_order AS o ON a.vendor_id = o.vendor_id
