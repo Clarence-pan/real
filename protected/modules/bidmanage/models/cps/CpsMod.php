@@ -614,7 +614,14 @@ class CpsMod {
 			$posTry = BPMoniter::createMoniter(__METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
 			
 			// 查询网站显示的产品
-			$result = $this->cpsDao->queryShowCpsProduct($param);
+			$resultBb = $this->cpsDao->queryShowCpsProduct($param);
+			
+			// 整合结果
+			if (!empty($resultBb) && is_array($resultBb)) {
+				foreach ($resultBb as $resultBbObj) {
+					$result[$resultBbObj['blockName']][] = $resultBbObj['productId'];
+				}
+			}
 			
 			// 结束监控
 			BPMoniter::endMoniter($posTry, Symbol::TWO_HUNDRED, __LINE__);
@@ -643,9 +650,23 @@ class CpsMod {
 		try {
 			// 添加监控
 			$posTry = BPMoniter::createMoniter(__METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
+			// 查询已存在区块
+			$existsBlocks = $this->cpsDao->getExistsBlocks($param);
+			$existsBlocksName = array();
+			foreach ($existsBlocks as $existsBlocksObj) {
+				$existsBlocksName[] = $existsBlocksObj['block_name'];
+			}
 			
-			// 同步网站数据
-			$this->cpsDao->syncCpsBlockProduct($param);
+			// 过滤删除区块
+			$param['blockNames'] = array_diff($existsBlocksName, $param['blockNames']);
+			
+			if (!empty($param['blockNames']) && is_array($param['blockNames'])) {
+				// 同步网站数据
+				foreach ($param['blockNames'] as &$blockNmaesObj) {
+					$blockNmaesObj = chr(39).$blockNmaesObj.chr(39);
+				}
+				$this->cpsDao->syncCpsBlockProduct($param);
+			}
 			
 			// 结束监控
 			BPMoniter::endMoniter($posTry, Symbol::TWO_HUNDRED, __LINE__);
@@ -1245,6 +1266,25 @@ class CpsMod {
             throw new BBException($e->getCode(), $e->getMessage(), "系统同步CPS订单异常", $e);
         }
     }
+    
+    /**
+	 * 查询CPS协议
+	 */
+	public function getCpsAgreement($param) {
+		// 填充日志
+		if ($this->bbLog->isInfo()) {
+			$this->bbLog->logMethod($param, $param['agencyId']."查询CPS协议", __METHOD__.Symbol::CONS_DOU_COLON.__LINE__, chr(50));
+		}
+
+		// 初始化返回结果
+		$result = array();
+			
+		// 查询CPS协议
+		$result = "";
+        
+        // 返回结果
+        return $result;
+	}
 	
 }
 

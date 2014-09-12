@@ -136,7 +136,7 @@ class CpsController extends restSysServer {
 		
 		try {
 			// 校验参数
-			if (!empty($data['webClass']) && !empty($data['startCityCode']) && !empty($data['productType']) && isset($data['blockName'])) {
+			if (!empty($data['webClass']) && !empty($data['startCityCode']) && !empty($data['productType'])) {
 					
 				// 获取网站显示的产品
 				$dataRe = $this->cpsMod->getShowCpsProduct($data);
@@ -191,14 +191,14 @@ class CpsController extends restSysServer {
 		try {
 			// 校验参数
 			if (!empty($data['webClass']) && !empty($data['startCityCode']) && !empty($data['productType']) 
-				&& isset($data['delBlockName']) && isset($data['defaultBlockName'])) {
+				&& isset($data['blockNames'])) {
 					
 				// 网站删除区块，同步数据
 				$this->cpsMod->delCpsBlock($data);
 				
 				// 整合结果，自定义编码和语句
-				$result['errorCode'] = ErrorCode::ERR_231500;
-				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231500)];
+				$result['errorCode'] = ErrorCode::ERR_231506;
+				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231506)];
 				
 				// 返回结果
 				$this->returnRestStand($result);

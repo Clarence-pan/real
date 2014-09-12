@@ -209,5 +209,33 @@ class CpsController extends restUIServer {
 			$this->returnRestStand($result);
 		}
     }
+    
+    /**
+     * 查询CPS协议
+     */
+    public function doRestGetCpsagreement($url, $data) {
+    	$result = $this->genrateReturnRest();
+		
+		try {
+			// 查询CPS供应商
+			$resultMod = $this->cpsMod->getCpsAgreement($data);
+					
+			// 整合结果，自定义编码和语句
+			$result['data'] = $resultMod;
+			$result['errorCode'] = ErrorCode::ERR_231500;
+			$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231500)];
+					
+			// 返回结果
+			$this->returnRestStand($result);
+		} catch(Exception $e) {
+			// 注入异常和日志
+			new BBException($e->getCode(), $e->getMessage());
+			$result['success'] = Symbol::CONS_FALSE;
+			$result['errorCode'] = ErrorCode::ERR_231000;
+			$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231000)];
+			// 返回结果
+			$this->returnRestStand($result);
+		}
+    }
 	
 }

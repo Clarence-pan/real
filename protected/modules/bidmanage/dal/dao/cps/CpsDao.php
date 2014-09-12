@@ -129,7 +129,7 @@ class CpsDao extends DaoModule {
 			
 			// 查询区块信息
 			$sqlBlock = "SELECT 	 
-							DISTINCT block_name	 
+							block_name	 
 						FROM 
 							cps_product
 						WHERE
@@ -188,6 +188,44 @@ class CpsDao extends DaoModule {
 	}
 	
 	/**
+	 * 查询已存在的区块
+	 */
+	public function getExistsBlocks($param) {
+		// 初始化返回结果
+		$result = array();
+
+		try {
+			
+			// 查询区块信息
+			$sqlBlock = "SELECT 	 
+							DISTINCT block_name	 
+						FROM 
+							cps_product
+						WHERE
+							start_city_code = ".$param['startCityCode']."
+						and
+							del_flag = 0 
+						and
+							cps_flag = 1
+						and
+							product_type = ".$param['productType']."			
+						and
+							web_class = ".$param['webClass'];
+			$result = $this->dbRW->createCommand($sqlBlock)->queryAll();
+			
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+            // 抛异常
+			throw new BBException(ErrorCode::ERR_231550, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231550)], $sqlBlock."向数据库查询已存在的区块异常", $e);
+        }
+        
+        // 返回结果
+		return $result;
+	}
+	
+	/**
 	 * 同步区块和产品
 	 */
 	public function syncCpsBlockProduct($param) {
@@ -211,7 +249,7 @@ class CpsDao extends DaoModule {
 						"update_uid)".
 						"SELECT ".
 							"vendor_id,". 
-							"'".$param['defaultBlockName']."',".
+							"'".Sundry::DEFAULT_BLICK."',".
 							"product_id, ".
 							"product_type, ".
 							"start_city_code,".
@@ -224,19 +262,19 @@ class CpsDao extends DaoModule {
 							"4333,".
 							"'".date(Sundry::TIME_Y_M_D)."',".
 							"4333".
-						"FROM ".
-						    "cps_product".
-						"WHERE ".
-						    "del_flag = 0".
-						"AND ".
+						" FROM ".
+						    "cps_product ".
+						" WHERE ".
+						    "del_flag = 0 ".
+						" AND ".
 							"start_city_code = ".$param['startCityCode'].
-						"AND ".
+						" AND ".
 							"web_class = ".$param['webClass'].
-						"AND ".
+						" AND ".
 							"product_type = ".$param['productType'].						
-						"AND ".
-						   	"block_name = '".$param['delBlockName']."'";
-						   	
+						" AND ".
+						   	"block_name IN (".implode(chr(44), $param['blockNames']).") ";		
+					   	
 			// 初始化更新SQL
 	   		$sqlUpd = "UPDATE
 						     cps_product
@@ -251,7 +289,7 @@ class CpsDao extends DaoModule {
 						AND 
 							product_type = ".$param['productType']."						
 						AND
-						   	block_name = '".$param['delBlockName']."'";
+						   	block_name IN (".implode(chr(44), $param['blockNames']).")";
 						   	
 			// 操作数据库
 			$sqlData = array();
@@ -588,8 +626,8 @@ class CpsDao extends DaoModule {
 			
 			// 根据产品ID查询产品名称
 			$sqlRows = "SELECT ".
-							" product_id as productId, ". 	
-							" product_type as productType ".
+							" block_name as blockName, ". 	
+							" product_id as productId ". 	
 						" FROM " .
 							" cps_product ".
 						" WHERE ". 
@@ -599,11 +637,8 @@ class CpsDao extends DaoModule {
 						" AND ".
 							" start_city_code = ".$params['startCityCode'].
 						" AND ".
-							" product_type = ".$params['productType'].
-						" AND ".
-							" block_name = '".$params['blockName']."'";	
+							" product_type = ".$params['productType'];	
 			$result = $this->dbRO->createCommand($sqlRows)->queryAll();
-			
 		} catch (BBException $e) {
             // 抛异常
             throw $e;
