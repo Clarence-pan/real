@@ -316,14 +316,14 @@ class CpsMod {
 				// 获取已下线的产品ID
 				$productsDbIds = array_unique($productsDbIds);
 				$productsDbIds = array_diff($productsDbIds, $rorRowProductIds);
-				var_dump(11);die;
+				
 				// 查询产品名称
 				$proIdNames = array();
 				if (!empty($productsDbIds)) {
 					$proIdNames = $this->cpsDao->getExistsProductNameId($productsDbIds, chr(49));
 				}
 				
-				var_dump(11);die;
+				
 				foreach($proIdNames as $proIdNamesObj) {
 					$proIdNamesKv[$proIdNamesObj['product_id']] = $proIdNamesObj['product_name'];
 				}
