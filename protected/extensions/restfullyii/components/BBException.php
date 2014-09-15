@@ -26,7 +26,7 @@ class BBException extends Exception {
 	/**
 	 * 构造函数
 	 */
-	function __construct($errCode=array(), $errMsg="", $errData="", $e) {
+	function __construct($errCode=array(), $errMsg="", $errData="", $e=null) {
 		// 编码和消息
 		$this->initCodenMsg($errCode, $errMsg);
 		// 位置
