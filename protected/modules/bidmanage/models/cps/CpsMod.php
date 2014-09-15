@@ -113,6 +113,14 @@ class CpsMod {
 			unset($webParam);
 			$cateValues = $webRows['filters'][0]['cateValues'];
 			
+			// 如果供应商没有分类信息，则返回空结果
+			if (empty($cateValues) || !is_array($cateValues)) {
+				// 结束监控
+				BPMoniter::endMoniter($posTry, Symbol::ONE_THOUSAND, __LINE__);
+				// 返回结果
+        		return $result; 
+			}
+			
 			// 初始化cateValues  ID集合
 	        foreach($cateValues as $key => $val){
 	        	array_push($cateIds, $val["id"]);  
@@ -339,7 +347,7 @@ class CpsMod {
 					$productsTemp['productName'] = empty($rorRows[$productsDbObj['product_id']]) ? $proIdNamesKv[$productsDbObj['product_id']] : $rorRows[$productsDbObj['productName']];
 					$productsTemp['checkerFlag'] = empty($rorRows[$productsDbObj['product_id']]) ? chr(49) : chr(50);
 					$productsTemp['tuniuPrice'] = empty($rorRows[$productsDbObj['product_id']]) ? $productsDbObj['tuniu_price'] : intval($rorRows[$productsDbObj['product_id']]['tuniuPrice']);
-					$productsTemp['isPrinciple'] = $productsDbObj['is_principle'];
+					$productsTemp['isPrinciple'] = $productsDbObj['is_principal'];
 	 				$productsTemp['delEnable'] = ($now == $productsDbObj['add_time'] ? chr(48) : chr(49));
 					$blocksInfo[$productsDbObj['block_name']]['products'][] = $productsTemp; 
 				}
