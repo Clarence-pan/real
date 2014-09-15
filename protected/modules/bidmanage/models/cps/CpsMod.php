@@ -140,11 +140,12 @@ class CpsMod {
 			$webClasses = $this->cpsDao->getWebClassByName($param);
 			
 			// 如果没有分类信息，则返回空结果
-			if (empty($webClasses) || empty($webClasses) || !in_array($webClasses['web_class'], $cateIds)) {
+			if (empty($webClasses) || empty($cateIds) || !in_array($webClasses['web_class'], $cateIds)) {
 				// 返回结果
 	        	return $result; 
 			}
 			unset($cateIds);
+			
 			
 			// 获取需要查询的分类ID
 		    $webClassesOther = $webClasses['web_class'];

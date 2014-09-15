@@ -28,8 +28,7 @@ class CpsDao extends DaoModule {
 							del_flag = 0 
 						AND 
 							ad_name = '".$param['webClassName']."'";
-					
-			$result = $this->executeSql($sqlRows, self::ROWO);
+			$result = $this->dbRO->createCommand($sqlRows)->queryRow();
 			
 		} catch (BBException $e) {
             // 抛异常
