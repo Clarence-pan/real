@@ -127,8 +127,8 @@ class CpsIao {
 		$client = new RESTClient;
 		$bbLog = new BBLog();
 		
-        // $uri = Yii::app()->params['TUNIU_HOST'] . 'interface/siteConfig/prdCps';
-        $uri = "http://www.tuniutest2.com/interface/siteConfig/prdCps";
+        $uri = Yii::app()->params['TUNIU_HOST'] . 'interface/siteConfig/prdCps';
+        // $uri = "http://www.tuniutest2.com/interface/siteConfig/prdCps";
 		
 		// 初始化返回结果
         $response = array();
@@ -141,7 +141,7 @@ class CpsIao {
         	if (empty($response) || !is_array($response) || !$response['success'] 
         		&& empty($response['data']) || !is_array($response['data'])) {
         		// 抛异常
-				throw new BBException(ErrorCode::ERR_231400, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231400)], BPMoniter::getMoniter($posM).Symbol::CONS_DOU_COLON."获取BOSS订单异常".$uri.str_replace("\"", Symbol::EMPTY_STRING, json_encode($param)));
+				throw new BBException(ErrorCode::ERR_231104, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231104)], BPMoniter::getMoniter($posM).Symbol::CONS_DOU_COLON."获取BOSS订单异常".$uri.str_replace("\"", Symbol::EMPTY_STRING, json_encode($param)));
         	}
         	
         } catch (BBException $e) {
@@ -149,7 +149,7 @@ class CpsIao {
             throw $e;
         } catch (Exception $e) {
             // 抛异常
-			throw new BBException(ErrorCode::ERR_231400, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231400)], BPMoniter::getMoniter($posM).Symbol::CONS_DOU_COLON."获取BOSS订单异常".$uri.str_replace("\"", Symbol::EMPTY_STRING, json_encode($param)), $e);
+			throw new BBException(ErrorCode::ERR_231104, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231104)], BPMoniter::getMoniter($posM).Symbol::CONS_DOU_COLON."获取BOSS订单异常".$uri.str_replace("\"", Symbol::EMPTY_STRING, json_encode($param)), $e);
         }
         
         // 填充日志
