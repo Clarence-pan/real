@@ -4,6 +4,7 @@ Yii::import('application.modules.bidmanage.dal.dao.cps.CpsDao');
 Yii::import('application.modules.bidmanage.dal.iao.RorProductIao');
 Yii::import('application.modules.bidmanage.dal.iao.TuniuIao');
 Yii::import('application.modules.bidmanage.dal.iao.CpsIao');
+Yii::import('application.modules.bidmanage.models.common.ComdbMod');
 
 /**
  * CPS业务处理类
@@ -26,6 +27,11 @@ class CpsMod {
     private $rorProductIao;
     
     /**
+     * 数据共通类
+     */
+    private $_comdbMod;
+    
+    /**
      * 默认构造函数
      */
 	function __construct() {
@@ -35,6 +41,8 @@ class CpsMod {
 		$this->cpsDao = new CpsDao();
 		// 初始化搜索接口调用类
 		$this->rorProductIao = new RorProductIao();
+		// 初始化数据共通类
+		$this->_comdbMod = new ComdbMod();
 	}	
 	
 	/**
@@ -130,6 +138,7 @@ class CpsMod {
 			// 需要筛选分类
 			// 查询分类信息
 			$webClasses = $this->cpsDao->getWebClassByName($param);
+			
 			// 如果没有分类信息，则返回空结果
 			if (empty($webClasses) || empty($webClasses) || !in_array($webClasses['web_class'], $cateIds)) {
 				// 返回结果
@@ -139,13 +148,14 @@ class CpsMod {
 			
 			// 获取需要查询的分类ID
 		    $webClassesOther = $webClasses['web_class'];
-			
+		    
 			// 调用网站区块，如果没有区块直接返回空
 			$tuniuParam = array();
-			$tuniuParam['webClass'] = $param['webClass'];
+			$tuniuParam['webClass'] = $webClassesOther;
 			$tuniuParam['startCityCode'] = $param['startCityCode'];
 			$tuniuParam['productType'] = $param['productType'];
 			$tuniuBlock = CpsIao::queryTuniuCpsBlocks($tuniuParam);
+			
 			// $tuniuBlock = array(array('blockName' => 'aaaa', 'webClass' => 426),array('blockName' => 'bbb', 'webClass' => 428));
 			if (empty($tuniuBlock) && !is_array($tuniuBlock)) {
 				// 结束监控
@@ -203,6 +213,7 @@ class CpsMod {
 				$mainKeyPro[$mainProductObj['productId']] = chr(49);
 			}
 			unset($mainProduct);
+			
 			// 获取区块信息
 			$blocksInfo = $this->getCpsBlock($param, $tuniuBlock, $webClassesOther, $allProduct);
 			$allProduct = $blocksInfo['rows'];
@@ -215,6 +226,7 @@ class CpsMod {
 					$tempRows['productName'] = $allProductObj['productName'];
 					$tempRows['checkerFlag'] = $allProductObj['checkFlag'];
 					$tempRows['tuniuPrice'] = $allProductObj['tuniuPrice'];
+					$tempRows['isInBlock'] = $allProductObj['isInBlock'];
 					$singlePro[] = $allProductObj['productId'];
 					$rows[] = $tempRows;
 				}
@@ -280,29 +292,38 @@ class CpsMod {
 			$productsDb = $existsInfo['product'];
 			unset($existsInfo);
 			
+			$productsDbIds = array();
+			foreach($productsDb as $productsDbObj) {
+				$productsDbIds[] = $productsDbObj['product_id'];
+			}
+			
+			// 重整搜索数据
+			$rorRowProductIds = array();
+			foreach($rows as $rowsObj) {
+				// 提取已经存储在本地的产品
+				if (in_array($rowsObj['productId'], $productsDbIds)) {
+					$rowsObj['isInBlock'] = chr(49);
+				} else {
+					$rowsObj['isInBlock'] = chr(48);
+				}
+				$rorRows[$rowsObj['productId']] = $rowsObj;
+				$rorRowProductIds[] = $rowsObj['productId'];
+			}
+			
 			$proIdNamesKv = array();
 			if (!empty($productsDb) && is_array($productsDb)) {
-				$productsDbIds = array();
-				foreach($productsDb as $productsDbObj) {
-					$productsDbIds[] = $productsDbObj['product_id'];
-				}
-				// 重整搜索数据
-				$rorRowProductIds = array();
-				foreach($rows as $rowsObj) {
-					// 提取已经存储在本地的产品
-					if (in_array($rowsObj['productId'], $productsDbIds)) {
-						$rowsObj['isInBlock'] = chr(49);
-					} else {
-						$rowsObj['isInBlock'] = chr(48);
-					}
-					$rorRows[$rowsObj['productId']] = $rowsObj;
-					$rorRowProductIds[] = $rowsObj['productId'];
-				}
+				
 				// 获取已下线的产品ID
 				$productsDbIds = array_unique($productsDbIds);
 				$productsDbIds = array_diff($productsDbIds, $rorRowProductIds);
+				var_dump(11);die;
 				// 查询产品名称
-				$proIdNames = $this->cpsDao->getExistsProductNameId($productsDbIds, chr(49));
+				$proIdNames = array();
+				if (!empty($productsDbIds)) {
+					$proIdNames = $this->cpsDao->getExistsProductNameId($productsDbIds, chr(49));
+				}
+				
+				var_dump(11);die;
 				foreach($proIdNames as $proIdNamesObj) {
 					$proIdNamesKv[$proIdNamesObj['product_id']] = $proIdNamesObj['product_name'];
 				}
@@ -321,9 +342,11 @@ class CpsMod {
 	 				$productsTemp['delEnable'] = ($now == $productsDbObj['add_time'] ? chr(48) : chr(49));
 					$blocksInfo[$productsDbObj['block_name']]['products'][] = $productsTemp; 
 				}
-				foreach ($blocksInfo as $key => $val) {
-					$blocksInfoTrue[] = $val;
-				}
+			}
+			
+			// 整合区块
+			foreach ($blocksInfo as $key => $val) {
+				$blocksInfoTrue[] = $val;
 			}
 			
 			// 整合最终结果
@@ -354,7 +377,6 @@ class CpsMod {
 		// 初始化返回结果
 		$result = array();
 		$result['rows'] = array();
-		$rows = array();
 
 		// 逻辑全部在异常块里执行，代码量不要超过200，超过200需要另抽方法
 		try {
@@ -368,9 +390,9 @@ class CpsMod {
 			
 			// 初始化基础维度
 			$blocks = $param['blocks'];
-			$blockIds = array();
+			$blockNames = array();
 			foreach ($blocks as $blocksObj) {
-				$blockIds[] = $blocksObj['blockName'];
+				$blockNames[] = $blocksObj['blockName'];
 			}
 			
 			// 初始化需要批量执行的SQL
@@ -382,36 +404,69 @@ class CpsMod {
 			$tuniuParam['startCityCode'] = $param['startCityCode'];
 			$tuniuParam['productType'] = $param['productType'];
 			$tuniuBlock = CpsIao::queryTuniuCpsBlocks($tuniuParam);
-			// $tuniuBlock = array(array('blockName' => 'aaaa', 'webClass' => 426),array('blockName' => 'bbb', 'webClass' => 428));
-//			if (empty($tuniuBlock) && !is_array($tuniuBlock)) {
-//				// 结束监控
-//				BPMoniter::endMoniter($posTry, Symbol::ONE_THOUSAND, __LINE__);
-//				// 返回结果
-//        		return $result; 
-//			}
 			
+			// 该出发城市，该分类下区块已全部删除
+			if (empty($tuniuBlock) && !is_array($tuniuBlock)) {
+				// 全部删除
+				$endParam = array();
+				$endParam['agencyId'] = $param['agencyId'];
+				$endParam['startCityCode'] = $param['startCityCode'];
+				$endParam['webClass'] = $param['webClass'];
+				$endParam['productType'] = $param['productType'];
+				$this->cpsDao->endCpsBlock($endParam);
+				// 设置返回消息
+				$result['rows'] = '该出发城市下的该分类所拥有的区块已被全部删除，所以无法保存区块信息，正在推广中的产品将自动下线。';
+				// 结束监控
+				BPMoniter::endMoniter($posTry, Symbol::ONE_THOUSAND, __LINE__);
+				// 返回结果
+        		return $result; 
+			}
 			
 			// 查询现有区块
 			$existsInfo = $this->cpsDao->getExistsBlockProduct($param);
 			
 			// 分析区块修改状态
-			$blockDbIds = array();
+			$blockDbNames = array();
 			$existsInfoBlock = $existsInfo['block'];
 			if (!empty($existsInfoBlock) && is_array($existsInfoBlock)) {
 				foreach ($existsInfoBlock as $existsInfoBlockObj) {
-					$blockDbIds[] = $existsInfoBlockObj['block_name'];
+					$blockDbNames[] = $existsInfoBlockObj['block_name'];
 				}
 				unset($existsInfoBlock);
 			}
+			
+			// 该出发城市，该分类下部分区块删除
+			$tuniuBlock = array_unique($tuniuBlock);
+			$tuniuDel = array_diff($blockNames, $tuniuBlock);
+			$tuniuDelDb = array_diff($blockDbNames, $tuniuBlock);
+			if (!empty($tuniuDel) && is_array($tuniuDel)
+				&& !empty($tuniuDelDb) && is_array($tuniuDelDb)) {
+				$syncParam = array();
+				$syncParam['agencyId'] = $param['agencyId'];
+				$syncParam['startCityCode'] = $param['startCityCode'];
+				$syncParam['webClass'] = $param['webClass'];
+				$syncParam['productType'] = $param['productType'];
+				$syncParam['blockNames'] = $tuniuDelDb;
+				$this->cpsDao->syncCpsBlockProduct($syncParam);
+				// 设置返回消息
+				$result['rows'] = '保存的区块中有部分区块已被删除，所以无法保存区块信息，请重新读取区块信息并保存，正在推广中的产品将自动移至其他产品推荐区块。';
+				// 结束监控
+				BPMoniter::endMoniter($posTry, Symbol::ONE_THOUSAND, __LINE__);
+				// 返回结果
+        		return $result; 
+			}
+			
 			// 需要新增的区块
-			$blockAdd = array_diff($blockIds, $blockDbIds);
+			$blockAdd = array_diff($blockNames, $blockDbNames);
 			// 需要删除的区块
-			$blockDel = array_diff($blockDbIds, $blockIds);
+			$blockDel = array_diff($blockDbNames, $blockNames);
 			// 需要修改的区块
-			$blockUpd = array_intersect($blockIds, $blockDbIds);
+			$blockUpd = array_intersect($blockNames, $blockDbNames);
 				
 			// 生成删除区块的SQL
-			$sqlData[] = "update cps_product set cps_flag = 2, uid = ".$param['agencyId'].", show_end_date = '".$now."' where vendor_id = ".$param['agencyId']." and web_class = ".$param['webClass']." and start_city_code = ".$param['startCityCode']." and block_name in (".implode(chr(44), $blockDel).")";
+			if (!empty($blockDel)) {
+				$sqlData[] = "update cps_product set cps_flag = 2, uid = ".$param['agencyId'].", show_end_date = '".$now."' where vendor_id = ".$param['agencyId']." and web_class = ".$param['webClass']." and start_city_code = ".$param['startCityCode']." and block_name in (".implode(chr(44), $blockDel).")";
+			}
 			
 			// 生成新增区块和新增产品的SQL
 			$blockProductAdd = array();
@@ -425,7 +480,7 @@ class CpsMod {
 					foreach ($proArr as $proArrObj) {
 						$blockProductAddTemp['blockName'] = $blocksObj['blockName'];
 						$blockProductAddTemp['productId'] = $proArrObj['productId'];
-						$blockProductAddTemp['isPrincipal'] = $proArrObj['isPrincipal'];
+						$blockProductAddTemp['isPrincipal'] = $proArrObj['isPrinciple'];
 						$blockProductAddTemp['tuniuPrice'] = $proArrObj['tuniuPrice'];
 						$blockProductAdd[] = $blockProductAddTemp;
 						$productNameIds[] = $proArrObj['productId'];
@@ -438,7 +493,7 @@ class CpsMod {
 						if (intval(chr(48)) > $proArrObj['dbId']) {
 							$blockProductAddTemp['blockName'] = $blocksObj['blockName'];
 							$blockProductAddTemp['productId'] = $proArrObj['productId'];
-							$blockProductAddTemp['isPrincipal'] = $proArrObj['isPrincipal'];
+							$blockProductAddTemp['isPrincipal'] = $proArrObj['isPrinciple'];
 							$blockProductAddTemp['tuniuPrice'] = $proArrObj['tuniuPrice'];
 							$blockProductAdd[] = $blockProductAddTemp;
 							$productNameIds[] = $proArrObj['productId'];
@@ -449,11 +504,12 @@ class CpsMod {
 					} 
 				}
 			}
+			
 			// 生成需要新增的产品和区块
-			$column = array('block_name', 'product_id', 'is_principal', 'tuniu_price', 'show_start_date', 'web_class', 'product_type', 
+			$column = array('block_name', 'product_id', 'is_principal', 'tuniu_price', 'cps_flag', 'show_start_time', 'web_class', 'product_type', 
 							'vendor_id', 'start_city_code', 'add_uid', 'add_time', 'update_uid');
 			$columnValue = array('blockName', 'productId', 'isPrincipal', 'tuniuPrice');
-			$defaultValue = array($now, $param['webClass'], $param['productType'], $param['agencyId'], $param['startCityCode'], $param['agencyId'], $now, $param['agencyId']);
+			$defaultValue = array(chr(49), $now, $param['webClass'], $param['productType'], $param['agencyId'], $param['startCityCode'], $param['agencyId'], $now, $param['agencyId']);
 			$sqlAdd = $this->_comdbMod->generateComInsert("cps_product", $column, $columnValue, $blockProductAdd, $defaultValue);
 			$sqlData = array_merge($sqlData, $sqlAdd);
 			unset($blockProductAdd);
@@ -472,14 +528,16 @@ class CpsMod {
 			}
 			
 			// 生成SQL，并批量更新产品名称表
-			$column = array('id', 'product_name', 'update_uid');
-			$columnValue = array('id', 'productName');
-			$updateColumn = array('product_name', 'update_uid');
-			$defaultValue = array($param['agencyId']);
-			$sqlToUpds = $this->_comdbMod->generateComUpdate("cps_product_name", $column, $columnValue, $proNameUpdSql, $defaultValue, $updateColumn);
-			$this->productDao->executeSql($sqlToUpds, DaoModule::SALL);
-			unset($proNameUpdSql);
-			unset($sqlToUpds);
+			if (!empty($proNameUpdSql)) {
+				$column = array('id', 'product_name', 'update_uid');
+				$columnValue = array('id', 'productName');
+				$updateColumn = array('product_name', 'update_uid');
+				$defaultValue = array($param['agencyId']);
+				$sqlToUpds = $this->_comdbMod->generateComUpdate("cps_product_name", $column, $columnValue, $proNameUpdSql, $defaultValue, $updateColumn);
+				$this->cpsDao->executeSql($sqlToUpds, DaoModule::SALL);
+				unset($proNameUpdSql);
+				unset($sqlToUpds);
+			}
 			
 			$proNameGap = array_diff($productNameIds, $productNameIdsDbArr);
 			// 生成SQL数据
@@ -493,12 +551,10 @@ class CpsMod {
 			// 生成产品表插表SQL
 			$column = array('product_id', 'product_name', 'add_uid', 'add_time', 'update_uid');
 			$columnValue = array('productId', 'productName');
-			$defaultValue = array($param['accountId'], $now, $param['accountId']);
+			$defaultValue = array($param['agencyId'], $now, $param['agencyId']);
 			$sqlAdd = $this->_comdbMod->generateComInsert("cps_product_name", $column, $columnValue, $proNameGapSql, $defaultValue);
 			$sqlData = array_merge($sqlData, $sqlAdd);
 			unset($proNameGapSql);
-			
-			
 			
 			// 生成修改区块删除的SQL
 			$dbId = array();
@@ -655,15 +711,22 @@ class CpsMod {
 				$existsBlocksName[] = $existsBlocksObj['block_name'];
 			}
 			
-			// 过滤删除区块
+			// 过滤需要操作的区块名称
 			$param['blockNames'] = array_diff($existsBlocksName, $param['blockNames']);
 			
-			if (!empty($param['blockNames']) && is_array($param['blockNames'])) {
-				// 同步网站数据
-				foreach ($param['blockNames'] as &$blockNmaesObj) {
-					$blockNmaesObj = chr(39).$blockNmaesObj.chr(39);
+			// 过滤删除区块，分两种情况，1 区块全部删除  2 区块部分删除
+			if (!empty($param['blockNames'])) {
+				// 部分删除			
+				if (!empty($param['blockNames']) && is_array($param['blockNames'])) {
+					// 同步网站数据
+					foreach ($param['blockNames'] as &$blockNmaesObj) {
+						$blockNmaesObj = chr(39).$blockNmaesObj.chr(39);
+					}
+					$this->cpsDao->syncCpsBlockProduct($param);
 				}
-				$this->cpsDao->syncCpsBlockProduct($param);
+			} else {
+				// 全部删除
+				$this->cpsDao->endCpsBlock($param);
 			}
 			
 			// 结束监控

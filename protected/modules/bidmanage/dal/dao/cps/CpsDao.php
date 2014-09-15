@@ -144,7 +144,7 @@ class CpsDao extends DaoModule {
 							web_class = ".$param['webClass']." 		 		
 						and 
 							vendor_id = ".$param['agencyId'];
-			$result['block'] = $this->executeSql($sqlBlock, self::ALL);
+			$result['block'] = $this->dbRW->createCommand($sqlBlock)->queryAll();
 			
 			// 查询产品信息
 			$sqlProduct = "SELECT 
@@ -173,7 +173,7 @@ class CpsDao extends DaoModule {
 								web_class = ".$param['webClass']." 			 
 							and 
 								vendor_id = ".$param['agencyId'];
-			$result['product'] = $this->executeSql($sqlProduct, self::ALL);
+			$result['product'] = $this->dbRW->createCommand($sqlProduct)->queryAll();
 			
 		} catch (BBException $e) {
             // 抛异常
@@ -391,7 +391,7 @@ class CpsDao extends DaoModule {
 							del_flag = 0 
 						AND 
 							product_id IN (".implode(chr(44), $param).")";
-			$result = $this->executeSql($sqlRows, self::ALL);
+			$result = $this->dbRW->createCommand($sqlRows)->queryAll();
 			
 		} catch (BBException $e) {
             // 抛异常
