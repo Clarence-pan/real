@@ -231,6 +231,16 @@ class CpsDao extends DaoModule {
 	public function syncCpsBlockProduct($param) {
 		try {
 			
+			// 初始化当前时间
+			$now = date(Sundry::TIME_Y_M_D);
+			
+			// 初始化动态SQL
+			$dySql = Symbol::EMPTY_STRING;
+			if (!empty($param['agencyId'])) {
+				$dySql .= " AND
+						   	  vendor_id = ".$param['agencyId'];
+			} 
+			
 			// 初始化插入默认区块SQL
 			$sqlIns = "INSERT INTO cps_product ".
 						"(vendor_id, ".
@@ -260,7 +270,7 @@ class CpsDao extends DaoModule {
 							"show_start_time,".
 							"show_end_time,".
 							"4333,".
-							"'".date(Sundry::TIME_Y_M_D)."',".
+							"'".$now."',".
 							"4333".
 						" FROM ".
 						    "cps_product ".
@@ -273,23 +283,28 @@ class CpsDao extends DaoModule {
 						" AND ".
 							"product_type = ".$param['productType'].						
 						" AND ".
-						   	"block_name IN (".implode(chr(44), $param['blockNames']).") ";		
+						   	"block_name IN (".implode(chr(44), $param['blockNames']).") ".
+						$dySql;		
 					   	
 			// 初始化更新SQL
 	   		$sqlUpd = "UPDATE
 						     cps_product
 						SET
-							del_flag = 1
+							cps_flag = 2,
+							show_end_time = '".$now."'
 						WHERE 
 						    del_flag = 0
 						AND 
+							cps_flag = 1
+						AND 		
 							start_city_code = ".$param['startCityCode']."
 						AND 
 							web_class = ".$param['webClass']."
 						AND 
 							product_type = ".$param['productType']."						
 						AND
-						   	block_name IN (".implode(chr(44), $param['blockNames']).")";
+						   	block_name IN (".implode(chr(44), $param['blockNames']).")".
+						$dySql;
 						   	
 			// 操作数据库
 			$sqlData = array();
@@ -303,6 +318,52 @@ class CpsDao extends DaoModule {
         } catch (Exception $e) {
             // 抛异常
 			throw new BBException(ErrorCode::ERR_231600, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231600)], $sqlIns.Symbol::CONS_DOU_COLON.$sqlUpd."向数据库同步区块和产品异常", $e);
+        }
+	}
+	
+	/**
+	 * 结束区块推广
+	 */
+	public function endCpsBlock($param) {
+		try {
+			// 初始化动态SQL
+			$dySql = Symbol::EMPTY_STRING;
+			if (!empty($param['agencyId'])) {
+				$dySql .= " AND
+						   	  vendor_id = ".$param['agencyId'];
+			} 
+			if (!empty($param['blockNames'])) {
+				$dySql .= " AND
+						   	  block_name IN (".implode(chr(44), $param['blockNames']).")";
+			}
+					   	
+			// 初始化更新SQL
+	   		$sqlUpd = "UPDATE
+						     cps_product
+						SET
+							cps_flag = 2,
+							show_end_time = '".date(Sundry::TIME_Y_M_D)."'
+						WHERE 
+						    del_flag = 0
+						AND 
+							cps_flag = 1
+						AND 		
+							start_city_code = ".$param['startCityCode']."
+						AND 
+							web_class = ".$param['webClass']."
+						AND 
+							product_type = ".$param['productType'].
+						$dySql;
+						   	
+			// 操作数据库
+			$this->dbRW->createCommand($sqlUpd)->execute();
+			
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+            // 抛异常
+			throw new BBException(ErrorCode::ERR_231600, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231600)], $sqlUpd.Symbol::CONS_DOU_COLON.$sqlUpd."向数据库结束区块推广异常", $e);
         }
 	}
 	
@@ -703,7 +764,7 @@ class CpsDao extends DaoModule {
 					  " AND " .
 					  	"cps_flag = 1 ";
 			// 查询CPS供应商
-			$this->dbRW->createCommand($sqlRow)->queryRow();
+			return $this->dbRW->createCommand($sqlRow)->queryRow();
 			
 		} catch (BBException $e) {
             // 抛异常
