@@ -8,8 +8,28 @@
  * Description: database_config.inc.php
  */
 $databaseConfig = array(
-    'buckbeek_master' => array(
-        'connectionString' => 'mysql:host=10.10.30.35;dbname=buckbeek;port=3307',
+//    'buckbeek_master' => array(
+//        'connectionString' => 'mysql:host=10.10.30.35;dbname=buckbeek;port=3307',
+//        'username' => 'buckbeektest',
+//        'password' => 'tuniu520',
+//        'class' => 'CDbConnection',
+//        'charset' => 'utf8',
+//        'enableProfiling' => YII_DEBUG,
+//        'enableParamLogging' => YII_DEBUG,
+//        'autoConnect' => false
+//    ),
+//    'buckbeek_slave' => array(
+//        'connectionString' => 'mysql:host=10.10.30.35;dbname=buckbeek;port=3307',
+//        'username' => 'buckbeektest',
+//        'password' => 'tuniu520',
+//        'class' => 'CDbConnection',
+//        'charset' => 'utf8',
+//        'enableProfiling' => YII_DEBUG,
+//        'enableParamLogging' => YII_DEBUG,
+//        'autoConnect' => false
+//    ),
+	'buckbeek_master' => array(
+        'connectionString' => 'mysql:host=10.10.30.34;dbname=buckbeek;port=3312',
         'username' => 'buckbeektest',
         'password' => 'tuniu520',
         'class' => 'CDbConnection',
@@ -19,7 +39,7 @@ $databaseConfig = array(
         'autoConnect' => false
     ),
     'buckbeek_slave' => array(
-        'connectionString' => 'mysql:host=10.10.30.35;dbname=buckbeek;port=3307',
+        'connectionString' => 'mysql:host=10.10.30.34;dbname=buckbeek;port=3312',
         'username' => 'buckbeektest',
         'password' => 'tuniu520',
         'class' => 'CDbConnection',
