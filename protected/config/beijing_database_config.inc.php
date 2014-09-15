@@ -29,7 +29,7 @@ $databaseConfig = array(
 //        'autoConnect' => false
 //    ),
 	'buckbeek_master' => array(
-        'connectionString' => 'mysql:host=10.10.30.34;dbname=buckbeek;port=3312',
+        'connectionString' => 'mysql:host=10.10.30.141;dbname=buckbeek;port=3312',
         'username' => 'buckbeektest',
         'password' => 'tuniu520',
         'class' => 'CDbConnection',
@@ -39,7 +39,7 @@ $databaseConfig = array(
         'autoConnect' => false
     ),
     'buckbeek_slave' => array(
-        'connectionString' => 'mysql:host=10.10.30.34;dbname=buckbeek;port=3312',
+        'connectionString' => 'mysql:host=10.10.30.141;dbname=buckbeek;port=3312',
         'username' => 'buckbeektest',
         'password' => 'tuniu520',
         'class' => 'CDbConnection',
