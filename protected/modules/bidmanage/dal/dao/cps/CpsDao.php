@@ -3,6 +3,45 @@
 Yii::import('application.dal.dao.DaoModule');
 
 class CpsDao extends DaoModule {
+	
+	/**
+	 * 查询分类信息
+	 */
+	public function getWebClassInfoById($param) {
+		// 初始化返回结果
+		$result = array();
+
+		try {
+			
+			// 查询信息
+			$sqlRows = "SELECT 	
+					        ad_name AS webName,
+							web_class AS webClass			 
+						FROM 
+							position_sync_class 
+						WHERE 
+							start_city_code = ".$param['startCityCode']."
+						AND 
+							web_class IN (".$param['webClassIds'].") 
+						AND 
+							parent_depth IN (0,1) 
+						AND 
+							del_flag = 0
+						AND
+							class_depth = ".$param['classDepth'];
+			$result = $this->dbRO->createCommand($sqlRows)->queryAll();
+			
+		} catch (BBException $e) {
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+            // 抛异常
+			throw new BBException(ErrorCode::ERR_231550, ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231550)], $sqlRows."向数据库查询查询分类信息异常", $e);
+        }
+        
+        // 返回结果
+		return $result;
+	}
 
 	/**
 	 * 查询分类ID

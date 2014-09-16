@@ -46,24 +46,21 @@ class CpsMod {
 	}	
 	
 	/**
-	 * 获取需要编辑的CPS产品
+	 * 获取CPS分类页信息
 	 */
-	public function getCpsProduct($param) {
+	public function getCpsWebClassInfo($param) {
 		// 填充日志
 		if ($this->bbLog->isInfo()) {
-			$this->bbLog->logMethod($param, $param['agencyId']."获取需要编辑的CPS产品", __METHOD__.Symbol::CONS_DOU_COLON.__LINE__, chr(50));
+			$this->bbLog->logMethod($param, $param['agencyId']."获取CPS分类页信息", __METHOD__.Symbol::CONS_DOU_COLON.__LINE__, chr(50));
 		}
-		
+
 		// 初始化返回结果
 		$result = array();
 		$result['rows'] = array();
-		$result['blocksInfo'] = array();
-		$result['count'] = 0;
-		$rows = array();
+		$result['count'] = chr(48);
 
-		// 逻辑全部在异常块里执行，代码量不要超过200，超过200需要另抽方法
 		try {
-			// 添加监控示例
+			// 添加监控
 			$posTry = BPMoniter::createMoniter(__METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
 			
 			// 从memcache获取导航树
@@ -143,20 +140,58 @@ class CpsMod {
         		return $result; 
 			}
 			
-			// 需要筛选分类
+			
 			// 查询分类信息
-			$webClasses = $this->cpsDao->getWebClassByName($param);
+			$dbParam['startCityCode'] = $param['startCityCode'];
+			$dbParam['classDepth'] = $param['classDepth'];
+			$dbParam['webClassIds'] = implode(chr(44), $cateIds);
+			$resultDb = $this->cpsDao->getWebClassInfoById($dbParam);
 			
-			// 如果没有分类信息，则返回空结果
-			if (empty($webClasses) || empty($cateIds) || !in_array($webClasses['web_class'], $cateIds)) {
-				// 返回结果
-	        	return $result; 
+			// 整合信息
+			if (!empty($resultDb)) {
+				$result['rows'] = $resultDb;
+				$result['count'] = count($resultDb);
 			}
-			unset($cateIds);
 			
+			// 结束监控
+			BPMoniter::endMoniter($posTry, Symbol::FOUR_HUNDRED, __LINE__);
+		} catch (BBException $e) {
+			BPMoniter::endMoniter($posTry, Symbol::BPM_ONE_MILLION, __LINE__);
+            // 抛异常
+            throw $e;
+        } catch (Exception $e) {
+        	// 抛异常
+			throw new BBException($e->getCode(), $e->getMessage(), BPMoniter::getMoniter($posTry).Symbol::CONS_DOU_COLON.$param['agencyId']."获取CPS分类页信息发生异常", $e);
+        } 
+        
+        // 返回结果
+        return $result;
+	}
+	
+	
+	/**
+	 * 获取需要编辑的CPS产品
+	 */
+	public function getCpsProduct($param) {
+		// 填充日志
+		if ($this->bbLog->isInfo()) {
+			$this->bbLog->logMethod($param, $param['agencyId']."获取需要编辑的CPS产品", __METHOD__.Symbol::CONS_DOU_COLON.__LINE__, chr(50));
+		}
+		
+		// 初始化返回结果
+		$result = array();
+		$result['rows'] = array();
+		$result['blocksInfo'] = array();
+		$result['count'] = 0;
+		$rows = array();
+
+		// 逻辑全部在异常块里执行，代码量不要超过200，超过200需要另抽方法
+		try {
+			// 添加监控示例
+			$posTry = BPMoniter::createMoniter(__METHOD__.Symbol::CONS_DOU_COLON.__LINE__);
 			
 			// 获取需要查询的分类ID
-		    $webClassesOther = $webClasses['web_class'];
+		    $webClassesOther = $param['webClass'];
 		    
 			// 调用网站区块，如果没有区块直接返回空
 			$tuniuParam = array();

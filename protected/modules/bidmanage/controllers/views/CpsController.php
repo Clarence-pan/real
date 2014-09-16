@@ -22,6 +22,57 @@ class CpsController extends restUIServer {
         $this->cpsMod = new CpsMod();
     }
     
+    
+    /**
+     * 获取CPS分类信息
+     */
+    public function doRestGetCpswebclassinfo($url, $data) {
+    	$result = $this->genrateReturnRest();
+		
+		try {
+			// 校验参数
+			if (isset($data['startCityCode']) && is_numeric($data['startCityCode']) && !empty($data['classDepth'])
+				 && is_numeric($data['classDepth'])) {
+				// 获取CPS分类信息
+				$resultMod = $this->cpsMod->getCpsWebClassInfo($data);
+					
+				// 整合结果，自定义编码和语句
+				$result['data'] = $resultMod;
+				$result['errorCode'] = ErrorCode::ERR_231500;
+				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231500)];
+					
+				// 返回结果
+				$this->returnRestStand($result);
+			} else {
+				
+				$result['errorCode'] = ErrorCode::ERR_210000;
+				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_210000)];
+				// 返回参数不正确
+				$this->returnRestStand($result);
+			}
+		} catch(BBException $e) {
+			$result['success'] = false;
+			if (intval(chr(48)) != $e->getErrCode()) {
+				$result['errorCode'] = $e->getErrCode();
+				$result['msg'] = $e->getErrMessage();
+			} else {
+				$result['errorCode'] = ErrorCode::ERR_231000;
+				$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231000)];
+			}
+			
+			// 返回结果
+			$this->returnRestStand($result);
+		} catch(Exception $e) {
+			// 注入异常和日志
+			new BBException($e->getCode(), $e->getMessage());
+			$result['success'] = false;
+			$result['errorCode'] = ErrorCode::ERR_231000;
+			$result['msg'] = ErrorCode::$errorCodeMap[strval(ErrorCode::ERR_231000)];
+			// 返回结果
+			$this->returnRestStand($result);
+		}
+    }
+    
     /**
      * 获取CPS产品
      */
@@ -30,7 +81,7 @@ class CpsController extends restUIServer {
 		
 		try {
 			// 校验参数
-			if (isset($data['startCityCode']) && is_numeric($data['startCityCode']) && !empty($data['webClassName'])
+			if (isset($data['startCityCode']) && is_numeric($data['startCityCode']) && !empty($data['webClass'])
 				 && !empty($data['webClassDepth']) && !empty($data['productType'])) {
 				// 获取CPS产品
 				$resultMod = $this->cpsMod->getCpsProduct($data);
