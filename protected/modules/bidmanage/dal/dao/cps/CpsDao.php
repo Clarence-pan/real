@@ -911,11 +911,11 @@ class CpsDao extends DaoModule {
             p.invoice_state AS invoiceState';
         $sqlFrom = '
             FROM bb_account AS a
-                INNER JOIN cps_order AS o ON a.vendor_id = o.vendor_id
-                INNER JOIN cps_purchase_order AS p ON o.order_id = p.order_id
-                INNER JOIN cps_product AS pdt ON o.cps_id = pdt.id';
+                INNER JOIN cps_order AS o ON a.vendor_id = o.vendor_id AND o.del_flag = 0
+                INNER JOIN cps_purchase_order AS p ON o.order_id = p.order_id AND p.del_flag = 0
+                INNER JOIN cps_product AS pdt ON o.cps_id = pdt.id AND pdt.del_flag = 0 ';
         $sqlWhere = '
-            WHERE 0 = 0 ';
+            WHERE a.del_flag = 0 ';
         $sqlParam = array();
         if (CommonTools::isValidParam($param['vendorId'])) {
             $sqlWhere .= ' AND a.vendor_id = :vendorId ';
