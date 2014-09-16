@@ -32,7 +32,7 @@ class CpsController extends restUIServer {
 		try {
 			// 校验参数
 			if (isset($data['startCityCode']) && is_numeric($data['startCityCode']) && !empty($data['classDepth'])
-				 && is_numeric($data['classDepth'])) {
+				 && is_numeric($data['classDepth']) && !empty($data['productType'])) {
 				// 获取CPS分类信息
 				$resultMod = $this->cpsMod->getCpsWebClassInfo($data);
 					
